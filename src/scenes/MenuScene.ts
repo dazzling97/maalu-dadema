@@ -15,9 +15,9 @@ const VERSION = 'v1.0';
 
 /** Big carved logo: chunky pixel letters with a gold-to-orange face, dark rim and drop shadow. */
 function logoCanvas(sinhala: boolean): HTMLCanvasElement {
-  const S = 6, title = 'MAALU HORU';
+  const S = 6, title = 'MAALU DADEMA';
   const tw = textWidth(title, S);
-  const [c, ctx] = makeCanvas(tw + 24, 5 * S + (sinhala ? 30 : 10));
+  const [c, ctx] = makeCanvas(tw + 24, 5 * S + (sinhala ? 32 : 10));
   const [t, tc] = makeCanvas(tw + 4, 5 * S + 4);
   drawText(tc, title, 2, 2, '#f6d24a', S);
   const img = tc.getImageData(0, 0, t.width, t.height);
@@ -34,10 +34,10 @@ function logoCanvas(sinhala: boolean): HTMLCanvasElement {
   ctx.drawImage(t, 10, 1);
   if (sinhala) {
     // Sinhala title set in a real font, then snapped to hard pixels
-    const [s, sc] = makeCanvas(c.width, 18);
-    sc.font = '700 13px "Noto Sans Sinhala", sans-serif';
+    const [s, sc] = makeCanvas(c.width, 20);
+    sc.font = '700 15px "Noto Sans Sinhala", sans-serif';
     sc.textAlign = 'center'; sc.textBaseline = 'middle'; sc.fillStyle = '#ffe9a8';
-    sc.fillText('මාළු හොරු', c.width / 2, 9);
+    sc.fillText('මාළු දඩයම', c.width / 2, 10);
     const d = sc.getImageData(0, 0, s.width, s.height);
     for (let i = 0; i < d.data.length; i += 4) d.data[i + 3] = d.data[i + 3] > 105 ? 255 : 0;
     sc.putImageData(d, 0, 0);
@@ -63,6 +63,10 @@ export class MenuScene extends UiScene {
     this.first = true;
     this.show('main');
     this.cameras.main.fadeIn(400, 22, 38, 29);
+    // the Sinhala web font can arrive late: redraw the title once it does
+    const onFont = (_p: unknown, key: string, v: unknown) => { if (key === 'sinhala' && v === true && this.screen === 'main') { this.first = false; this.show('main', this.sel); } };
+    this.registry.events.on('changedata', onFont);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.registry.events.off('changedata', onFont));
     this.input.keyboard!.on('keydown', this.onKey, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => { this.input.keyboard!.off('keydown', this.onKey, this); this.clearUi(); });
   }

@@ -1,4 +1,4 @@
-# Maalu Horu (මාළු හොරු) — The Great Fish Heist
+# Maalu Dadema (මාළු දඩයම) — The Great Fish Heist
 
 A 2D pixel-art fishing survival game set in a Sri Lankan village. Phaser 3 + TypeScript + Vite.
 

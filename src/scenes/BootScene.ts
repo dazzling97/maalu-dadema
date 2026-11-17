@@ -12,7 +12,7 @@ export class BootScene extends Phaser.Scene {
   create() {
     this.cameras.main.setBackgroundColor('#16261d');
     fitUi(this);
-    this.textures.addCanvas('boot-title', textCanvas('MAALU HORU', PAL.cream, '#0c1410', 3));
+    this.textures.addCanvas('boot-title', textCanvas('MAALU DADEMA', PAL.cream, '#0c1410', 3));
     this.textures.addCanvas('boot-sub', textCanvas('FILLING THE WEWA...', '#8fcb55', null, 1));
     this.add.image(VIEW.w / 2, VIEW.h / 2 - 8, 'boot-title');
     this.add.image(VIEW.w / 2, VIEW.h / 2 + 14, 'boot-sub');
@@ -33,7 +33,8 @@ export class BootScene extends Phaser.Scene {
     const fonts = (document as Document & { fonts?: FontFaceSet }).fonts;
     if (fonts?.load) {
       fonts.load('700 12px Nunito').catch(() => undefined); fonts.load('400 12px Nunito').catch(() => undefined);
-      fonts.load('700 13px "Noto Sans Sinhala"', 'මාළු').then((f) => begin(f.length > 0), () => begin(false));
+      // if the font turns up after we have moved on, the title screen adds the Sinhala line then
+      fonts.load('700 13px "Noto Sans Sinhala"', 'මාළු දඩයම').then((f) => { if (started && f.length > 0) this.registry.set('sinhala', true); begin(f.length > 0); }, () => begin(false));
       this.time.delayedCall(1800, () => begin(false));
     } else this.time.delayedCall(60, () => begin(false));
   }
