@@ -1,5 +1,9 @@
 # Maalu Dadema (මාළු දඩයම) — The Great Fish Heist
 
+**Just want to play?** Double-click `play.html`. It is the whole game in one file and needs no install or server (an internet connection only adds the Sinhala title font). `index.html` is the developer entry point and only works through `npm run dev`, because it loads the TypeScript source.
+
+To rebuild `play.html` after changing the code: `npm run build:play`.
+
 A 2D pixel-art fishing survival game set in a Sri Lankan village. Phaser 3 + TypeScript + Vite.
 
 **The challenge:** three fixed stages played in order. Get 20 fish into the stationary bag in 3:00,

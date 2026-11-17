@@ -9,7 +9,8 @@
     "build:embed": "vite build --config vite.embed.config.ts",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build:play": "vite build --config vite.embed.config.ts && node scripts/make-play.cjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"
