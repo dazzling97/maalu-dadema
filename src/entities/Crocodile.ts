@@ -5,6 +5,7 @@ import { Layout, POND_C } from '../world/layout';
 import { ORIGIN } from '../art/textures';
 import { StateMachine } from '../systems/StateMachine';
 import { Player } from './Player';
+import { HD } from '../art/hd';
 import { audio } from '../systems/Audio';
 
 export type CState = 'surface' | 'patrol' | 'hunt' | 'telegraph' | 'lunge' | 'recover' | 'reposition' | 'stunned' | 'retreat' | 'gone';
@@ -24,6 +25,8 @@ export class Crocodile {
   private way = { x: 0, y: 0 };
   private bit = false;
   private ended = false;
+  private wakeT = 0;
+  private last = { x: 0, y: 0 };
   fsm: StateMachine<Crocodile, CState>;
 
   constructor(
@@ -31,9 +34,9 @@ export class Crocodile {
     readonly type: CrocType, private token: AttackToken, private onBite: () => void, private onEnd: () => void,
   ) {
     this.x = x; this.y = y;
-    this.sprite = scene.add.sprite(x, y, type.sheet, 0).setOrigin(ORIGIN.croc.x, ORIGIN.croc.y).setAlpha(0);
-    this.alert = scene.add.image(x, y, 'alert').setOrigin(0.5, 1).setDepth(DEPTH.air + 5).setVisible(false);
-    for (let i = 0; i < 2; i++) this.stars.push(scene.add.sprite(x, y, 'sparkle', 1).setDepth(DEPTH.air + 4).setVisible(false));
+    this.sprite = scene.add.sprite(x, y, type.sheet, 0).setOrigin(ORIGIN.croc.x, ORIGIN.croc.y).setScale(HD).setAlpha(0);
+    this.alert = scene.add.image(x, y, 'alert').setScale(HD).setOrigin(0.5, 1).setDepth(DEPTH.air + 5).setVisible(false);
+    for (let i = 0; i < 2; i++) this.stars.push(scene.add.sprite(x, y, 'sparkle', 1).setScale(HD).setDepth(DEPTH.air + 4).setVisible(false));
     scene.tweens.add({ targets: this.sprite, alpha: 1, duration: 500 });
     this.ripple();
     audio.play('crocEmerge');
@@ -148,7 +151,7 @@ export class Crocodile {
     this.face(tx);
   }
   private ripple() {
-    const r = this.scene.add.sprite(this.x, this.y - 3, 'ring', 0).setDepth(DEPTH.waterFx + 1).play('ring');
+    const r = this.scene.add.sprite(this.x, this.y - 3, 'ring', 0).setScale(HD).setDepth(DEPTH.waterFx + 1).play('ring');
     r.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => r.destroy());
   }
 
@@ -177,6 +180,18 @@ export class Crocodile {
     else if (st === 'stunned') { s.anims.stop(); s.setFrame(6); }
     else if (st === 'recover') { s.anims.stop(); s.setFrame(2); }
     else s.play(`${this.type.sheet}-${water ? 'swim' : 'walk'}`, true);
+    // a V of wake trails a crocodile swimming through open water
+    const moved = Math.hypot(this.x - this.last.x, this.y - this.last.y);
+    this.last.x = this.x; this.last.y = this.y;
+    this.wakeT -= dt;
+    if (water && moved > 0.15 && this.wakeT <= 0 && this.L.pondAt(this.x, this.y) < -4) {
+      this.wakeT = 0.14;
+      const right = this.dir > 0;
+      const w = this.scene.add.image(this.x + (right ? 17 : -17), this.y - 4, 'wake').setOrigin(0.06, 0.5).setFlipX(right)
+        .setScale(HD * 0.7).setAlpha(0.85).setDepth(DEPTH.waterFx + 1);
+      if (right) w.setOrigin(0.94, 0.5);
+      this.scene.tweens.add({ targets: w, scale: HD * 1.7, alpha: 0, duration: 950, ease: 'Sine.out', onComplete: () => w.destroy() });
+    }
     const jitter = st === 'telegraph' ? Math.round(Math.sin(time / 28)) : 0;
     s.setPosition(Math.round(this.x) + jitter, Math.round(this.y)).setFlipX(this.dir > 0);
     s.setDepth(water && st !== 'lunge' ? DEPTH.flat + 0.5 : DEPTH.sorted + this.y);

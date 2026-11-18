@@ -11,6 +11,7 @@ import { Player } from './Player';
 import { Input } from '../systems/Input';
 import { Ambient } from './Ambient';
 import { audio } from '../systems/Audio';
+import { HD } from '../art/hd';
 import { uiText } from '../scenes/UiScene';
 
 type FState = 'none' | 'cast' | 'wait' | 'bite' | 'reel' | 'end';
@@ -60,11 +61,11 @@ export class Fishing {
 
   constructor(private scene: Phaser.Scene, private L: Layout, private player: Player, private input: Input, private ambient: Ambient, readonly eco: Economy, readonly zones: ZoneState) {
     this.gfx = scene.add.graphics();
-    this.bob = scene.add.image(0, 0, 'bobber', 0).setOrigin(ORIGIN.bobber.x, ORIGIN.bobber.y).setVisible(false);
-    this.bang = scene.add.image(0, 0, 'bang').setOrigin(0.5, 1).setDepth(DEPTH.air + 5).setVisible(false);
+    this.bob = scene.add.image(0, 0, 'bobber', 0).setScale(HD).setOrigin(ORIGIN.bobber.x, ORIGIN.bobber.y).setVisible(false);
+    this.bang = scene.add.image(0, 0, 'bang').setScale(HD).setOrigin(0.5, 1).setDepth(DEPTH.air + 5).setVisible(false);
     this.prompt = scene.add.image(0, 0, 'key-space').setOrigin(0.5, 1).setDepth(DEPTH.air + 4).setVisible(false);
-    this.marker = scene.add.sprite(0, 0, 'ring', 1).setDepth(DEPTH.waterFx + 2).setVisible(false);
-    this.lurker = scene.add.sprite(0, 0, 'fish', 0).setDepth(DEPTH.fish).setAlpha(0).play('fish-dark');
+    this.marker = scene.add.sprite(0, 0, 'ring', 1).setScale(HD).setDepth(DEPTH.waterFx + 2).setVisible(false);
+    this.lurker = scene.add.sprite(0, 0, 'fish', 0).setScale(HD).setDepth(DEPTH.fish).setAlpha(0).play('fish-dark');
   }
 
   /** Zone currently being drained by the player's line, if any. */
@@ -125,15 +126,19 @@ export class Fishing {
   }
   private splash(p: Pt, n: number, power: number) {
     for (let i = 0; i < n; i++) {
-      const d = this.scene.add.image(p.x, p.y, 'drop').setDepth(DEPTH.sorted + p.y + 3);
+      const d = this.scene.add.image(p.x, p.y, 'drop').setScale(HD * (0.6 + Math.random() * 0.7)).setDepth(DEPTH.sorted + p.y + 3);
       const a = -Math.PI * (0.15 + 0.7 * Math.random()), sp = power * (0.5 + Math.random() * 0.6);
       this.scene.tweens.add({ targets: d, x: p.x + Math.cos(a) * sp, duration: 420, ease: 'Linear' });
       this.scene.tweens.add({ targets: d, y: p.y + Math.sin(a) * sp, duration: 210, ease: 'Quad.out', yoyo: true, onComplete: () => d.destroy() });
     }
     this.ring(p);
+    // a white crown of foam that bursts and settles
+    const crown = this.scene.add.image(p.x, p.y, 'puff', 2).setTintFill(0xeafbf3).setScale(HD * 0.4).setDepth(DEPTH.waterFx + 2).setAlpha(0.9);
+    this.scene.tweens.add({ targets: crown, scale: HD * (0.8 + power / 15), alpha: 0, duration: 380, ease: 'Quad.out', onComplete: () => crown.destroy() });
+    if (power >= 9) this.scene.time.delayedCall(160, () => this.ring(p));
   }
   private ring(p: Pt) {
-    const r = this.scene.add.sprite(p.x, p.y, 'ring', 0).setDepth(DEPTH.waterFx + 1).play('ring');
+    const r = this.scene.add.sprite(p.x, p.y, 'ring', 0).setScale(HD).setDepth(DEPTH.waterFx + 1).play('ring');
     r.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => r.destroy());
   }
   private floatText(x: number, y: number, text: string, color: string, scale = 1) {
@@ -226,11 +231,12 @@ export class Fishing {
     this.splash(this.target, 9, 15);
     this.scene.cameras.main.shake(90, this.kind.rare ? 0.004 : 0.002);
     const s = this.player.sprite;
-    const fish = this.scene.add.image(this.target.x, this.target.y, 'catch', FISH.indexOf(this.kind)).setDepth(DEPTH.air + 3);
-    if (this.sizeIdx > 0) fish.setScale(this.sizeIdx === 1 ? 1 : 2); // huge fish read as huge
+    const fish = this.scene.add.image(this.target.x, this.target.y, 'catchHD', FISH.indexOf(this.kind)).setScale(HD).setDepth(DEPTH.air + 3);
+    if (this.sizeIdx > 0) fish.setScale((this.sizeIdx === 1 ? 1 : 2) * HD); // huge fish read as huge
     const head = { x: s.x, y: s.y - 44 };
     const reel = this.g.reelTime * 1000; // nets take longer to haul in
     this.scene.tweens.add({ targets: fish, x: head.x, duration: reel, ease: 'Sine.inOut' });
+    this.scene.tweens.add({ targets: fish, angle: { from: -50, to: 12 }, duration: reel, ease: 'Sine.inOut' }); // it flips and wriggles
     this.scene.tweens.add({
       targets: fish, y: head.y, duration: reel, ease: 'Back.out',
       onComplete: () => this.caught(fish),
@@ -244,7 +250,7 @@ export class Fishing {
     audio.play(got > 1 ? 'catchMulti' : 'catch');
     if (golden) { this.hookedGolden = false; this.onGolden(); } else if (this.bonanza !== this.zone) for (let i = 0; i < got; i++) this.zones.take(this.zone);
     for (let i = 1; i < got; i++) { // the rest of the haul tumbles in after the first
-      const extra = this.scene.add.image(this.target.x, this.target.y, 'catch', i % 5).setDepth(DEPTH.air + 3);
+      const extra = this.scene.add.image(this.target.x, this.target.y, 'catchHD', i % 5).setScale(HD).setDepth(DEPTH.air + 3);
       this.scene.tweens.add({ targets: extra, x: this.player.sprite.x + (i - got / 2) * 7, y: this.player.sprite.y - 40 - (i % 2) * 6, duration: 260, delay: i * 50, ease: 'Quad.out' });
       this.scene.tweens.add({ targets: extra, alpha: 0, y: this.player.sprite.y - 16, duration: 260, delay: 420 + i * 40, onComplete: () => extra.destroy() });
     }
@@ -253,8 +259,10 @@ export class Fishing {
     this.floatText(s.x, s.y - 62, golden ? 'THE GOLDEN FISH!' : `${size.label}${this.kind.name}`, this.kind.rare ? '#ffe36a' : PAL.cream);
     this.floatText(s.x, s.y - 71, `+${got} FISH`, '#9ff08a', golden || got > 1 ? 2 : 1);
     this.scene.tweens.add({ targets: s, y: s.y - 5, duration: 110, yoyo: true, ease: 'Quad.out' }); // little hop of triumph
-    if (this.kind.rare || golden) for (let i = 0; i < 6; i++) {
-      const sp = this.scene.add.sprite(s.x + Phaser.Math.Between(-14, 14), s.y - 40 + Phaser.Math.Between(-10, 10), 'sparkle', 0).setDepth(DEPTH.air + 6);
+    const base = fish.scale; // the fish pops as it lands in your hands
+    this.scene.tweens.add({ targets: fish, scale: base * 1.35, angle: 0, duration: 120, yoyo: true, ease: 'Quad.out' });
+    for (let i = 0; i < (this.kind.rare || golden ? 8 : 3); i++) {
+      const sp = this.scene.add.sprite(s.x + Phaser.Math.Between(-14, 14), s.y - 40 + Phaser.Math.Between(-10, 10), 'sparkle', 0).setScale(HD).setDepth(DEPTH.air + 6);
       this.scene.time.delayedCall(i * 60, () => sp.play('sparkle'));
       sp.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => sp.destroy());
     }

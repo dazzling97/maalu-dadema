@@ -21,12 +21,25 @@ export function hdCanvas(w: number, h: number, scaled = true): [HTMLCanvasElemen
   return [c, x];
 }
 
+/** Every texture key drawn in high resolution: shown at HD scale (see hdScale). */
+export const HD_KEYS = new Set<string>();
+/** The scale that shows a texture at world size: HD for high-resolution keys, 1 for the rest. */
+export const hdScale = (key: string) => (HD_KEYS.has(key) ? HD : 1);
+
 /** Register a canvas as a texture with smooth filtering (the rest of the game uses nearest-neighbour). */
 export function addHD(scene: Phaser.Scene, key: string, c: HTMLCanvasElement) {
   if (scene.textures.exists(key)) scene.textures.remove(key);
   const t = scene.textures.addCanvas(key, c)!;
   t.setFilter(Phaser.Textures.FilterMode.LINEAR);
+  HD_KEYS.add(key);
   return t;
+}
+/** Register a sheet drawn at ART density; frame sizes and origin are given in world units. */
+export function addHDSheet(scene: Phaser.Scene, key: string, s: { canvas: HTMLCanvasElement; fw: number; fh: number; ox: number; oy: number }) {
+  const t = addHD(scene, key, s.canvas), fw = s.fw * ART, fh = s.fh * ART;
+  const cols = Math.round(s.canvas.width / fw), rows = Math.round(s.canvas.height / fh);
+  for (let r = 0, n = 0; r < rows; r++) for (let c = 0; c < cols; c++) t.add(n++, 0, c * fw, r * fh, fw, fh);
+  return { x: s.ox / s.fw, y: s.oy / s.fh };
 }
 
 // ---------------------------------------------------------------- colour helpers

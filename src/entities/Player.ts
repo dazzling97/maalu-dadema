@@ -30,7 +30,7 @@ export class Player {
     this.x = x; this.y = y;
     this.shadow = scene.add.image(x, y, 'shadow').setScale(HD).setDepth(DEPTH.flat + 2);
     this.sprite = scene.add.sprite(x, y, def.id, 0).setOrigin(ORIGIN[def.id].x, ORIGIN[def.id].y).setScale(HD);
-    for (let i = 0; i < 8; i++) this.puffs.push(scene.add.sprite(0, 0, 'puff', 0).setVisible(false).setOrigin(0.5, 0.7));
+    for (let i = 0; i < 8; i++) this.puffs.push(scene.add.sprite(0, 0, 'puff', 0).setScale(HD).setVisible(false).setOrigin(0.5, 0.7));
 
     this.fsm = new StateMachine<Player, PState>(this, {
       idle: {

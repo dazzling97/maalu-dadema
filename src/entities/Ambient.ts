@@ -23,7 +23,7 @@ export class Ambient {
     for (let i = 0; i < 20; i++) {
       const p = L.shorePoint(R() * Math.PI * 2, 30 + R() * 50);
       const gold = i % 5 === 0;
-      const s = scene.add.sprite(p.x, p.y, 'fish').setDepth(DEPTH.fish).setAlpha(gold ? 0.6 : 0.5).play(gold ? 'fish-gold' : 'fish-dark');
+      const s = scene.add.sprite(p.x, p.y, 'fish').setScale(HD).setDepth(DEPTH.fish).setAlpha(gold ? 0.6 : 0.5).play(gold ? 'fish-gold' : 'fish-dark');
       s.anims.setProgress(R());
       this.fish.push({ s, a: R() * Math.PI * 2, sp: 7 + R() * 9, x: p.x, y: p.y, turn: 0 });
     }
@@ -43,7 +43,7 @@ export class Ambient {
       this.sparkles.push(s);
       scene.time.delayedCall(R() * 1800, () => this.twinkle(s));
     }
-    for (let i = 0; i < 5; i++) this.rings.push(scene.add.sprite(0, 0, 'ring', 0).setDepth(DEPTH.waterFx).setVisible(false));
+    for (let i = 0; i < 5; i++) this.rings.push(scene.add.sprite(0, 0, 'ring', 0).setScale(HD).setDepth(DEPTH.waterFx).setVisible(false));
     for (let i = 0; i < 8; i++) this.leaves.push({ s: scene.add.sprite(0, 0, 'leaf', 0).setDepth(DEPTH.air - 1).setVisible(false).play('leaf'), life: 0, vx: 0, ph: 0 });
   }
 

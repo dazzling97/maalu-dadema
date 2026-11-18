@@ -487,18 +487,6 @@ export function egretSheet(): Sheet {
   return { canvas: c, fw: FW, fh: FH, ox: 9, oy: 19 };
 }
 
-export function fishSheet(): Sheet {
-  // frames 0-1 dark shadow fish, 2-3 golden one
-  const FW = 16, FH = 8;
-  const [c, ctx] = makeCanvas(FW * 4, FH);
-  for (let f = 0; f < 4; f++) {
-    const o = f * FW, gold = f > 1, flip = f % 2;
-    const body = gold ? '#c9703a' : '#0f3e5c', hi = gold ? '#e89a55' : '#16506f';
-    ellipse(ctx, o + 6, 4, 5, 2.2, body); rect(ctx, o + 3, 3, 5, 1, hi);
-    rect(ctx, o + 11, 3 + (flip ? 1 : -1), 2, 2, body); rect(ctx, o + 13, 2 + (flip ? 2 : -1), 2, 3, body);
-  }
-  return { canvas: c, fw: FW, fh: FH, ox: 8, oy: 4 };
-}
 
 export function butterflySheet(): Sheet {
   // 4 colours x 2 frames
@@ -525,42 +513,8 @@ export function dragonflySheet(): Sheet {
   return { canvas: c, fw: FW, fh: FH, ox: 5, oy: 2 };
 }
 
-export function sparkleSheet(): Sheet {
-  const [c, ctx] = makeCanvas(15, 5);
-  px(ctx, 2, 2, '#fff6c8');
-  rect(ctx, 6, 2, 3, 1, '#fff6c8'); rect(ctx, 7, 1, 1, 3, '#fff6c8'); px(ctx, 7, 2, '#ffffff');
-  rect(ctx, 10, 2, 5, 1, '#fff6c8'); rect(ctx, 12, 0, 1, 5, '#fff6c8'); rect(ctx, 11, 1, 3, 3, '#ffffff');
-  return { canvas: c, fw: 5, fh: 5, ox: 2, oy: 2 };
-}
 
-export function ringSheet(): Sheet {
-  const FW = 24, FH = 12;
-  const [c, ctx] = makeCanvas(FW * 4, FH);
-  for (let f = 0; f < 4; f++) {
-    const rx = 3 + f * 2.6, ry = 1.2 + f * 1.1;
-    const a = [0.9, 0.7, 0.45, 0.22][f];
-    for (let i = 0; i < 64; i++) {
-      const t = (i / 64) * Math.PI * 2;
-      if (f > 1 && i % 4 === 0) continue;
-      px(ctx, f * FW + 12 + Math.cos(t) * rx, 6 + Math.sin(t) * ry, `rgba(220,250,240,${a})`);
-    }
-  }
-  return { canvas: c, fw: FW, fh: FH, ox: 12, oy: 6 };
-}
 
-export function puffSheet(): Sheet {
-  const FW = 10, FH = 10;
-  const [c, ctx] = makeCanvas(FW * 4, FH);
-  const col = ['rgba(232,214,170,0.9)', 'rgba(232,214,170,0.7)', 'rgba(232,214,170,0.45)', 'rgba(232,214,170,0.25)'];
-  for (let f = 0; f < 4; f++) {
-    const o = f * FW;
-    if (f === 0) ellipse(ctx, o + 5, 6, 2, 1.5, col[0]);
-    if (f === 1) { ellipse(ctx, o + 4, 5, 2.4, 2, col[1]); ellipse(ctx, o + 7, 6, 1.5, 1.2, col[1]); }
-    if (f === 2) { ellipse(ctx, o + 3, 4, 2, 1.6, col[2]); ellipse(ctx, o + 7, 5, 1.6, 1.3, col[2]); px(ctx, o + 5, 2, col[2]); }
-    if (f === 3) { px(ctx, o + 2, 3, col[3]); px(ctx, o + 7, 4, col[3]); px(ctx, o + 5, 1, col[3]); px(ctx, o + 3, 5, col[3]); }
-  }
-  return { canvas: c, fw: FW, fh: FH, ox: 5, oy: 7 };
-}
 
 export function leafSheet(): Sheet {
   const [c, ctx] = makeCanvas(8, 3);
@@ -587,87 +541,11 @@ export function catchSheet(kinds: { colors: [string, string, string] }[]): Sheet
   return { canvas: c, fw: FW, fh: FH, ox: 8, oy: 5 };
 }
 
-export function bobberSheet(): Sheet {
-  // frame 0 floating, frame 1 pulled under
-  const [c, ctx] = makeCanvas(14, 8);
-  rect(ctx, 2, 1, 3, 2, '#e8433f'); rect(ctx, 2, 3, 3, 2, '#fff8ea'); px(ctx, 2, 1, '#ff8a70'); px(ctx, 3, 0, OL);
-  rect(ctx, 0, 5, 7, 1, 'rgba(233,251,241,0.8)');
-  rect(ctx, 9, 4, 3, 1, '#e8433f'); rect(ctx, 7, 5, 7, 1, 'rgba(233,251,241,0.9)'); px(ctx, 8, 6, 'rgba(233,251,241,0.7)'); px(ctx, 12, 6, 'rgba(233,251,241,0.7)');
-  return { canvas: c, fw: 7, fh: 8, ox: 3, oy: 5 };
-}
 
-export function bangCanvas(): HTMLCanvasElement {
-  const [c, ctx] = makeCanvas(11, 15);
-  rect(ctx, 1, 1, 9, 10, '#f6d24a'); rect(ctx, 2, 0, 7, 12, '#f6d24a'); rect(ctx, 4, 12, 3, 1, '#f6d24a'); px(ctx, 5, 13, '#f6d24a');
-  rect(ctx, 2, 1, 6, 1, '#fff3a0');
-  rect(ctx, 5, 2, 2, 5, '#b3261e'); rect(ctx, 5, 8, 2, 2, '#b3261e');
-  outline(c, OL);
-  return c;
-}
 
-export function dropCanvas(): HTMLCanvasElement {
-  const [c, ctx] = makeCanvas(2, 2);
-  rect(ctx, 0, 0, 2, 2, '#d9f7ee'); px(ctx, 1, 1, '#86dcc6');
-  return c;
-}
 
 // ---------------------------------------------------------------- crocodile + combat
-export const CROC_FW = 42;
-export const CROC_FH = 20;
 /** Frames: 0-1 swim (eyes and ridge only), 2-3 walk, 4 jaws open (telegraph), 5 lunge, 6 stunned. Faces left. */
-export function crocSheet(G: string[] = ['#3c5f2a', '#567f36', '#6f9a42', '#8fb857'], BELLY = '#cfd29a'): Sheet {
-  const [c, ctx] = makeCanvas(CROC_FW * 7, CROC_FH);
-  const body = (x: CanvasRenderingContext2D, mode: 'walk' | 'open' | 'lunge' | 'stun', leg: number) => {
-    const sx = mode === 'lunge' ? -2 : 0;
-    // tail
-    for (let i = 0; i < 14; i++) { const th = Math.max(1, Math.round(5 - i * 0.36)); rect(x, 27 + i, 12 - th / 2 + (mode === 'lunge' ? 0 : Math.round(Math.sin(i / 3 + leg * 3) * 1)), 1, th, i % 3 === 0 ? G[0] : G[1]); }
-    // legs
-    if (mode !== 'lunge') for (const [lx, ph] of [[15, 0], [25, 1]] as const) {
-      const o = (leg + ph) % 2 === 0 ? -1 : 1;
-      rect(x, lx + o, 14, 3, 3, G[1]); rect(x, lx + o - 1, 16, 4, 1, G[0]);
-    }
-    // trunk
-    ellipse(x, 21 + sx, 11.5, 9, 4.6, G[2]);
-    rect(x, 13 + sx, 13, 17, 2, BELLY); rect(x, 15 + sx, 15, 12, 1, '#a9ad78');
-    for (let i = 13; i < 30; i += 2) { px(x, i + sx, 7, G[0]); px(x, i + sx + 1, 6, G[0]); }
-    rect(x, 14 + sx, 8, 14, 1, G[3]);
-    // head
-    const open = mode === 'open' || mode === 'lunge';
-    rect(x, 3 + sx, 11, 11, 3, G[2]); rect(x, 3 + sx, 13, 11, 1, BELLY); // lower jaw
-    if (open) {
-      rect(x, 4 + sx, 7, 9, 4, '#b3261e'); rect(x, 5 + sx, 9, 6, 2, '#e8635a');
-      for (let i = 0; i < 10; i++) rect(x, 13 + sx - i, 7 - Math.round(i * 0.45), 1, 3, i < 2 ? G[1] : G[2]); // raised upper jaw
-      for (const tx of [4, 6, 8, 10]) { px(x, tx + sx, 10, '#ffffff'); px(x, tx + sx, 6 - Math.round((13 - tx) * 0.45) + 3, '#ffffff'); }
-      rect(x, 12 + sx, 4, 3, 2, G[3]); px(x, 13 + sx, 5, '#f6d24a'); px(x, 13 + sx, 4, '#2b1b2e');
-    } else {
-      rect(x, 3 + sx, 8, 11, 3, G[2]); rect(x, 3 + sx, 8, 10, 1, G[3]); px(x, 3 + sx, 7, G[1]); // snout + nostril
-      rect(x, 3 + sx, 11, 10, 1, G[0]);
-      for (const tx of [4, 6, 8]) px(x, tx + sx, 11, '#ffffff');
-      rect(x, 11 + sx, 6, 3, 2, G[3]);
-      if (mode === 'stun') { px(x, 11 + sx, 6, '#2b1b2e'); px(x, 13 + sx, 6, '#2b1b2e'); px(x, 12 + sx, 7, '#2b1b2e'); }
-      else { px(x, 12 + sx, 7, '#f6d24a'); px(x, 12 + sx, 6, '#2b1b2e'); }
-    }
-  };
-  const frame = (i: number, mode: 'walk' | 'open' | 'lunge' | 'stun', leg: number) => {
-    const [f, fx] = makeCanvas(CROC_FW, CROC_FH);
-    body(fx, mode, leg);
-    outline(f, OL);
-    ctx.drawImage(f, i * CROC_FW, 0);
-  };
-  frame(2, 'walk', 0); frame(3, 'walk', 1); frame(4, 'open', 0); frame(5, 'lunge', 0); frame(6, 'stun', 0);
-  // swim frames: only what breaks the surface
-  for (let i = 0; i < 2; i++) {
-    const [f, fx] = makeCanvas(CROC_FW, CROC_FH);
-    body(fx, 'walk', i);
-    fx.clearRect(0, 10, CROC_FW, CROC_FH);
-    fx.clearRect(27, 0, CROC_FW, CROC_FH);
-    for (let k = 30; k < 38; k += 3) px(fx, k, 9 - ((k + i) % 2), G[0]); // tail ridge
-    outline(f, '#17332a');
-    rect(fx, 2 + i, 10, 12, 1, 'rgba(233,251,241,0.8)'); rect(fx, 16 - i, 10, 14, 1, 'rgba(233,251,241,0.6)'); rect(fx, 31 + i, 10, 8, 1, 'rgba(233,251,241,0.5)');
-    ctx.drawImage(f, i * CROC_FW, 0);
-  }
-  return { canvas: c, fw: CROC_FW, fh: CROC_FH, ox: 21, oy: 16 };
-}
 
 export function lootCanvas(): HTMLCanvasElement {
   // gunny sack with a fish tail sticking out
@@ -784,23 +662,6 @@ export function gearSheet(): Sheet {
 }
 
 /** A net lying on the water: frame 0 small, 1 large, 2 small pulled tight, 3 large pulled tight. */
-export function netSheet(): Sheet {
-  const FW = 30, FH = 18;
-  const [c, ctx] = makeCanvas(FW * 4, FH);
-  for (let f = 0; f < 4; f++) {
-    const o = f * FW, big = f % 2 === 1, tight = f > 1;
-    const rx = (big ? 12 : 8) - (tight ? 2 : 0), ry = (big ? 6 : 4) - (tight ? 1 : 0), rim = big ? '#f6d24a' : '#c69862';
-    for (let y = -ry; y <= ry; y++) for (let x = -rx; x <= rx; x++) {
-      const e = Math.hypot(x / rx, y / ry);
-      if (e > 1) continue;
-      if (e > 0.82) px(ctx, o + 15 + x, 9 + y, rim);
-      else if ((x + y * 2) % 3 === 0 || (x - y * 2) % 3 === 0) px(ctx, o + 15 + x, 9 + y, 'rgba(240,232,208,0.85)');
-    }
-    for (const fx of [-rx, rx]) { rect(ctx, o + 15 + fx - 1, 8, 2, 2, '#e8433f'); px(ctx, o + 15 + fx - 1, 8, '#ff8a70'); }
-    if (tight) rect(ctx, o + 15 - rx, 9 + ry + 1, rx * 2, 1, 'rgba(233,251,241,0.8)');
-  }
-  return { canvas: c, fw: FW, fh: FH, ox: 15, oy: 9 };
-}
 
 /** "SHOP" board for the gear stall, with a little net on it. Frame 1 is the lit version shown when you are close. */
 export function shopSignSheet(): Sheet {
@@ -845,21 +706,7 @@ export function coinCanvas(): HTMLCanvasElement {
   return c;
 }
 
-export function alertCanvas(): HTMLCanvasElement {
-  const [c, ctx] = makeCanvas(11, 15);
-  rect(ctx, 1, 1, 9, 10, '#e8433f'); rect(ctx, 2, 0, 7, 12, '#e8433f'); rect(ctx, 4, 12, 3, 1, '#e8433f'); px(ctx, 5, 13, '#e8433f');
-  rect(ctx, 2, 1, 6, 1, '#ff8a70');
-  rect(ctx, 5, 2, 2, 5, '#ffffff'); rect(ctx, 5, 8, 2, 2, '#ffffff');
-  outline(c, OL);
-  return c;
-}
 
-export function stoneCanvas(): HTMLCanvasElement {
-  const [c, ctx] = makeCanvas(6, 6);
-  rect(ctx, 2, 1, 2, 4, '#8a8378'); rect(ctx, 1, 2, 4, 2, '#8a8378'); px(ctx, 2, 2, '#cfc8b6'); px(ctx, 3, 3, '#6b6560');
-  outline(c, '#3a3340');
-  return c;
-}
 
 export function heartSheet(): Sheet {
   const [c, ctx] = makeCanvas(22, 10);

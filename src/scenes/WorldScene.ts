@@ -283,7 +283,7 @@ export class WorldScene extends Phaser.Scene {
     const px = this.player.x, py = this.player.y - 14;
     for (let i = 0; i < n; i++) {
       this.time.delayedCall(i * 90 + 240, () => audio.play('deposit', 1 + i * 0.12)); // each fish lands a little higher
-      const img = this.add.image(px, py, 'catch', i % 3).setDepth(DEPTH.air + 3).setVisible(false);
+      const img = this.add.image(px, py, 'catchHD', i % 3).setScale(HD).setDepth(DEPTH.air + 3).setVisible(false);
       this.tweens.add({
         targets: img, x: BAG_POS.x, y: BAG_POS.y - 20, duration: 260, delay: i * 90, ease: 'Quad.in',
         onStart: () => img.setVisible(true),
@@ -348,7 +348,7 @@ export class WorldScene extends Phaser.Scene {
         const sign = this.shopSign, y = sign.y;
         this.tweens.add({ targets: sign, y: y - 3, duration: 260, yoyo: true, repeat: 7, ease: 'Sine.inOut', onComplete: () => sign.setY(y) });
         for (let i = 0; i < 10; i++) this.time.delayedCall(2800 + i * 380, () => {
-          const sp = this.add.sprite(GEAR_POS.x + Phaser.Math.Between(-24, 24), GEAR_POS.y - 20 - Phaser.Math.Between(0, 44), 'sparkle', 0).setDepth(DEPTH.air + 4).play('sparkle');
+          const sp = this.add.sprite(GEAR_POS.x + Phaser.Math.Between(-24, 24), GEAR_POS.y - 20 - Phaser.Math.Between(0, 44), 'sparkle', 0).setScale(HD).setDepth(DEPTH.air + 4).play('sparkle');
           sp.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => sp.destroy());
         });
       }
@@ -437,7 +437,7 @@ export class WorldScene extends Phaser.Scene {
     // 2. Sabapathi notices
     at(2500, () => {
       thief.play('sabapathi-idle-left');
-      const bang = this.add.image(thief.x, thief.y - 36, 'alert').setOrigin(0.5, 1).setDepth(DEPTH.air + 5);
+      const bang = this.add.image(thief.x, thief.y - 36, 'alert').setScale(HD).setOrigin(0.5, 1).setDepth(DEPTH.air + 5);
       this.tweens.add({ targets: thief, y: thief.y - 6, duration: 110, yoyo: true });
       this.tweens.add({ targets: bang, y: bang.y - 4, duration: 140, yoyo: true, repeat: 3, onComplete: () => bang.destroy() });
       this.float(thief.x, thief.y - 52, 'AIYO?!', '#ffe36a');
@@ -449,11 +449,11 @@ export class WorldScene extends Phaser.Scene {
       this.float(hero.sprite.x, hero.sprite.y - 44, `${name}: ALL THE FISH, SABAPATHI!`, '#9ff08a');
       this.tweens.add({ targets: hero.sprite, y: hero.sprite.y - 7, duration: 150, yoyo: true, repeat: 5, ease: 'Quad.out' });
       for (let i = 0; i < 14; i++) at(i * 110, () => {
-        const f = this.add.image(hero.sprite.x, hero.sprite.y - 22, 'catch', i % 5).setDepth(DEPTH.air + 3);
+        const f = this.add.image(hero.sprite.x, hero.sprite.y - 22, 'catchHD', i % 5).setScale(HD).setDepth(DEPTH.air + 3);
         const dx = (Math.random() - 0.5) * 90;
         this.tweens.add({ targets: f, x: f.x + dx, duration: 900 });
         this.tweens.add({ targets: f, y: f.y - 30 - Math.random() * 24, duration: 450, ease: 'Quad.out', yoyo: true, onComplete: () => f.destroy() });
-        const sp = this.add.sprite(hero.sprite.x + dx * 0.5, hero.sprite.y - 40 - Math.random() * 20, 'sparkle', 0).setDepth(DEPTH.air + 6).play('sparkle');
+        const sp = this.add.sprite(hero.sprite.x + dx * 0.5, hero.sprite.y - 40 - Math.random() * 20, 'sparkle', 0).setScale(HD).setDepth(DEPTH.air + 6).play('sparkle');
         sp.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => sp.destroy());
       });
       cam.shake(120, 0.002);
@@ -555,7 +555,7 @@ export class WorldScene extends Phaser.Scene {
       if (id === 'bonanza') { this.fishing.bonanza = z; say(`Fishing bonanza in the ${name}!`); return; }
       const spot = this.L.shorePoint(z === 'A' ? 1.9 : z === 'B' ? 0.3 : -2.75, 36);
       this.fishing.golden = spot;
-      this.goldenSprite = this.add.sprite(spot.x, spot.y, 'fish', 2).setDepth(DEPTH.waterFx + 1).setScale(2).play('fish-gold');
+      this.goldenSprite = this.add.sprite(spot.x, spot.y, 'fish', 2).setScale(2 * HD).setDepth(DEPTH.waterFx + 1).play('fish-gold');
       say(`A golden fish in the ${name}! Worth ${RUN.goldenFish}`);
     } else if (id === 'frenzy') say('Crocodile frenzy! Watch the water');
     else if (id === 'rush') { if (this.sabapathi.rush()) say('Sabapathi rush! He is running for the bag'); else this.events2.stop(this.elapsed); }
