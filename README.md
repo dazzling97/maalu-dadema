@@ -1,4 +1,4 @@
-# Maalu Dadema (මාළු දඩයම) — The Great Fish Heist
+# Malu Dadayama (මාළු දඩයම) — The Great Fish Heist
 
 **Just want to play?** Double-click `play.html`. It is the whole game in one file and needs no install or server (an internet connection only adds the Sinhala title font). `index.html` is the developer entry point and only works through `npm run dev`, because it loads the TypeScript source.
 
@@ -14,7 +14,7 @@ water and Sabapathi raids the bag. Beat Stage 3 and the fisherman pays Sabapathi
 npm install
 npm run dev          # local dev server
 npm run build        # typecheck + production build to dist/ (Vercel-ready)
-npm run build:embed  # single-file IIFE to dist-embed/ (window.MaaluHoru.mount)
+npm run build:embed  # single-file IIFE to dist-embed/ (window.MaluDadayama.mount)
 npm test             # 30 unit tests
 npm run build && node tests/playtest.cjs   # six bot player types play Stage 1 headlessly
 node tests/playtest.cjs average:2,skilled:3   # chosen bots on chosen stages

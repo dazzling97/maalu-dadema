@@ -19,7 +19,7 @@ export interface Save {
   touch: 'auto' | 'on' | 'off'; // on-screen controls: auto = on phones and tablets
 }
 
-const KEY = 'maalu-horu-v3';
+const KEY = 'maalu-horu-v3'; // the save slot from the game's first name: kept so nobody loses their settings and best runs
 const DEFAULT: Save = { charId: 'podipasiya', name: '', shake: true, hints: true, master: 0.8, music: 0.6, sfx: 0.9, muted: false, tutorial: false, howSeen: false, tutorials: [], eased: [], scores: [], touch: 'auto' };
 let cache: Save | null = null;
 

@@ -39,7 +39,7 @@ export function rotateHint(host: HTMLElement) {
         <div style="position:absolute;left:50%;bottom:5px;width:12px;height:3px;margin-left:-6px;border-radius:2px;background:#f6d24a"></div>
       </div>
       <div style="font-weight:900;font-size:20px;color:#ffe9a8;letter-spacing:0.5px">Turn your device sideways</div>
-      <div style="font-size:14px;margin:6px 0 16px;line-height:1.35">Maalu Dadema plays best in landscape: more pond, bigger buttons.</div>
+      <div style="font-size:14px;margin:6px 0 16px;line-height:1.35">Malu Dadayama plays best in landscape: more pond, bigger buttons.</div>
       <button type="button" style="font:800 15px Nunito, system-ui, sans-serif;color:#2b1b2e;background:linear-gradient(#fbe68a,#f6c93e 45%,#c98a1c);border:1.5px solid #3c2014;border-radius:10px;padding:10px 22px;min-height:44px">Play anyway</button>
     </div>
     <style>@keyframes mdTurn{0%,25%{transform:rotate(0)}55%,85%{transform:rotate(-90deg)}100%{transform:rotate(0)}}

@@ -184,20 +184,21 @@ export function gearIconsHD(): { canvas: HTMLCanvasElement; fw: number; fh: numb
 
 // ---------------------------------------------------------------- the logo
 /**
- * MAALU DADEMA in chunky, warm, carved letters: a gold-to-orange face, a dark rim,
+ * MALU DADAYAMA in chunky, warm, carved letters: a gold-to-orange face, a dark rim,
  * a soft drop shadow; the Sinhala name underneath when its font is available.
  * Returned at world size (w x h) for HD display.
  */
 export function logoHD(sinhala: boolean): { canvas: HTMLCanvasElement; w: number; h: number } {
-  const title = 'MAALU DADEMA', size = 34;
+  const title = 'MALU DADAYAMA', size = 34;
   const [m, mx] = hdCanvas(1, 1); void m;
   mx.font = `900 ${size}px ${UI}`;
-  const tw = Math.ceil(mx.measureText(title).width) + 2 * title.length + 8; // letter spacing, and room for the rim
+  const ink0 = mx.measureText(title).width + 2 * (title.length - 1); // drawn width with 2px letter spacing
+  const tw = Math.ceil(ink0) + 8; // and room for the rim
   const w = tw + 24, h = size + (sinhala ? 26 : 10);
   const [c, x] = hdCanvas(w, h);
   x.font = `900 ${size}px ${UI}`; x.textAlign = 'left'; x.textBaseline = 'alphabetic';
   if ('letterSpacing' in x) (x as Ctx & { letterSpacing: string }).letterSpacing = '2px';
-  const tx = 12, ty = size * 0.86 + 4;
+  const tx = (w - ink0) / 2, ty = size * 0.86 + 4; // optically centred, so the Sinhala and tagline line up under it
   // drop shadow and the dark rim
   x.save(); x.shadowColor = 'rgba(8,4,12,0.6)'; x.shadowBlur = 6; x.shadowOffsetY = 3; x.lineJoin = 'round'; x.strokeStyle = '#2b1b2e'; x.lineWidth = 7; x.strokeText(title, tx, ty); x.restore();
   x.lineJoin = 'round'; x.strokeStyle = '#4a2418'; x.lineWidth = 4; x.strokeText(title, tx, ty);

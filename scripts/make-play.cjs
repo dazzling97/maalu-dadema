@@ -3,14 +3,14 @@
 const fs = require('fs');
 const path = require('path');
 const root = path.join(__dirname, '..');
-const js = fs.readFileSync(path.join(root, 'dist-embed', 'maalu-horu.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
+const js = fs.readFileSync(path.join(root, 'dist-embed', 'malu-dadayama.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
 const html = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Maalu Dadema (මාළු දඩයම) — The Great Fish Heist</title>
-<meta name="description" content="Maalu Dadema (මාළු දඩයම): a pixel-art Sri Lankan fishing game.">
+<title>Malu Dadayama (මාළු දඩයම) — The Great Fish Heist</title>
+<meta name="description" content="Malu Dadayama (මාළු දඩයම): a Sri Lankan fishing game for desktop, phone and tablet.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@700&family=Nunito:wght@400;700&display=swap">
 <style>
   html, body { margin: 0; height: 100%; background: #14201a; overflow: hidden; }
@@ -21,7 +21,7 @@ const html = `<!doctype html>
 <body>
 <div id="game"></div>
 <script>${js}</script>
-<script>window.__game = MaaluHoru.mount({ parent: 'game' });</script>
+<script>window.__game = MaluDadayama.mount({ parent: 'game' });</script>
 </body>
 </html>
 `;
