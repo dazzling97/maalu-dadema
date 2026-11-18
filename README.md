@@ -35,6 +35,10 @@ E stores carried fish at the bag and opens the gear stall. Q switches equipment.
   12 coins, from Stage 3). `systems/Gear.ts` holds coins and equipment; fish sold from the bag become
   coins 1:1 and stop counting toward the target. Equipment carries into later stages; a retry restores
   the coins and equipment the stage started with; a new game resets both.
+- The shop (`scenes/ShopScene.ts`) shows Fish in Bag, fish carried and Fish Coins, a price on each item, and one
+  line saying what to do next (catch, deposit, sell or buy, from `shopHint()` in `systems/Gear.ts`). Only fish
+  already in the bag can be sold, and only as many as the purchase needs; the stage target is not required.
+  Sell and Buy buttons are faded when unavailable and say why when pressed.
 - `RUN`: hearts 3, start rocks 2, max rocks 5 (target, duration and carry limit come from the stage).
 - Win the moment the bag holds the target. Lose at 0:00 or 0 hearts. Either way everything freezes
   and the result screen shows fish collected, fish stolen, crocodiles stunned and time remaining.

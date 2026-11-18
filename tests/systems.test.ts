@@ -5,7 +5,7 @@ import { bandAt, crocInterval, theftUrge, grabSize, SpawnClock } from '../src/sy
 import { findPath } from '../src/systems/Pathfind';
 import { pickEvent, EventClock } from '../src/systems/Events';
 import { allowed, MIX } from '../src/systems/Audio';
-import { freshGear, copyGear, sellFish, buyGear, equipGear, cycleGear, catchSize } from '../src/systems/Gear';
+import { freshGear, copyGear, sellFish, buyGear, equipGear, cycleGear, catchSize, shopHint, nextGear } from '../src/systems/Gear';
 import { GEAR } from '../src/config/balance';
 import { ZONES, RUN, BANDS, BAG_RAID, EVENTS, STAGES, CUR, BAND_SPAN, applyStage } from '../src/config/balance';
 
@@ -266,6 +266,21 @@ describe('fish coins and equipment', () => {
     expect(g.coins).toBe(50);
     expect(buyGear(g, 'advnet', 2)).toBe('ok');
     expect(g.coins).toBe(50 - GEAR.advnet.cost);
+  });
+  it('the shop walks a new player through catch, deposit, sell, buy', () => {
+    const g = freshGear();
+    expect(shopHint(g, { stored: 0, carried: 0 }, 1).kind).toBe('catch');
+    expect(shopHint(g, { stored: 0, carried: 3 }, 1).kind).toBe('deposit'); // fish in hands cannot be sold
+    expect(shopHint(g, { stored: 4, carried: 0 }, 1).kind).toBe('catch'); // not enough stored to cover the net yet
+    expect(shopHint(g, { stored: 5, carried: 0 }, 1)).toMatchObject({ kind: 'sell', next: 'net', need: 5 }); // the stage target is not required
+    g.coins = 3;
+    expect(shopHint(g, { stored: 2, carried: 0 }, 1)).toMatchObject({ kind: 'sell', need: 2 });
+    g.coins = 5;
+    expect(shopHint(g, { stored: 0, carried: 0 }, 1).kind).toBe('buy');
+    buyGear(g, 'net', 1);
+    expect(nextGear(g, 1)).toBe(null); // the Advanced Net is still locked in Stage 2
+    expect(shopHint(g, { stored: 9, carried: 0 }, 1).kind).toBe('none');
+    expect(shopHint(g, { stored: 0, carried: 0 }, 2)).toMatchObject({ kind: 'catch', next: 'advnet', need: GEAR.advnet.cost });
   });
   it('switches only between owned equipment', () => {
     const g = freshGear();

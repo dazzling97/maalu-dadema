@@ -25,7 +25,7 @@ export function darkPanel(w: number, h: number, edge = 'rgba(246,231,193,0.28)')
 }
 
 export type BtnStyle = 'primary' | 'secondary' | 'link';
-export interface BtnOpts { style?: BtnStyle; h?: number; adjust?: (dir: -1 | 1) => void; }
+export interface BtnOpts { style?: BtnStyle; h?: number; adjust?: (dir: -1 | 1) => void; /** Drawn faded; still focusable and pressable, so it can say why it is unavailable. */ disabled?: boolean; }
 export interface Btn { c: Phaser.GameObjects.Container; act: () => void; select(on: boolean): void; adjust?: (dir: -1 | 1) => void; }
 
 /** Shared kit for menu-style scenes: pixel text, wooden buttons, keyboard + mouse focus. */
@@ -119,6 +119,7 @@ export class UiScene extends Phaser.Scene {
     const t = uiText(this, w / 2, Math.round(h / 2) - (dark ? 1 : 0), label, style === 'primary' ? 9 : style === 'link' ? 7.5 : 8, dark ? '#2b1b2e' : style === 'link' ? '#c9d4b8' : '#f6e7c1', true).setOrigin(0.5, 0.5);
     if (dark) t.setStroke('#2b1b2e', 0);
     c.add([off, on, t]);
+    if (opts.disabled) { off.setAlpha(0.45); on.setAlpha(0.6); t.setAlpha(0.55); }
     this.root.add(c);
     const y0 = y;
     const b: Btn = {
