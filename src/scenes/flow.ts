@@ -19,9 +19,10 @@ function begin(from: Phaser.Scene, stage: number, gear: GearState) {
   applyStage(stage);
   audio.unlock(); audio.setPaused(false); audio.intensity = 0; audio.startMusic();
   audio.play('stageStart');
-  ['menu', 'pause', 'result', 'shop', 'hud'].forEach((k) => from.scene.stop(k));
+  ['menu', 'pause', 'result', 'shop', 'hud', 'touch'].forEach((k) => from.scene.stop(k));
   from.scene.get('world').scene.restart();
   from.scene.run('hud');
+  from.scene.run('touch'); // on-screen controls; they stay hidden unless touch mode is on
 }
 /** New game: always from Stage 1 with clean totals. */
 export function startRun(from: Phaser.Scene) {
@@ -38,7 +39,7 @@ export function goMenu(from: Phaser.Scene) {
   from.registry.set('attract', true);
   applyStage(0);
   audio.setPaused(false); audio.intensity = 0;
-  ['pause', 'result', 'shop', 'hud'].forEach((k) => from.scene.stop(k));
+  ['pause', 'result', 'shop', 'hud', 'touch'].forEach((k) => from.scene.stop(k));
   from.scene.get('world').scene.restart();
   from.scene.run('menu');
 }

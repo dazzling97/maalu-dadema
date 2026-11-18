@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { touchMode } from '../systems/Touch';
 import { DEPTH } from '../config/game';
 import { CUR, GEAR } from '../config/balance';
 import { BAG_POS, DOCKS, GEAR_POS } from '../world/layout';
@@ -46,6 +47,8 @@ export class Tutor {
   private threwAt = -99;
   private now = 0;
   private keyX: Phaser.Input.Keyboard.Key;
+  /** Set when the card is tapped (touch screens have no X key). */
+  private tapSkip = false;
 
   constructor(private c: TutorCtx) {
     const s = load();
@@ -53,6 +56,9 @@ export class Tutor {
     this.g = c.scene.add.graphics().setDepth(DEPTH.air + 5);
     this.arrow = c.scene.add.image(0, 0, 'arrow').setScale(HD).setDepth(DEPTH.air + 5).setRotation(Math.PI / 2).setVisible(false);
     this.keyX = c.scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.X);
+    const tap = () => { this.tapSkip = true; };
+    c.scene.game.events.on('coachSkip', tap);
+    c.scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => c.scene.game.events.off('coachSkip', tap));
     this.emit(null);
   }
   /** Called once the stage intro card has cleared. */
@@ -106,15 +112,20 @@ export class Tutor {
 
   private card(id: TutId): CoachCard {
     switch (id) {
-      case 'first_fishing': return { id, title: "Let's catch some fish! Head to the water and cast your line.", sub: 'Move: WASD or arrows   ·   Aim: mouse   ·   Space to cast, Space again on the !', icon: 'catch' };
-      case 'first_deposit': return { id, title: 'Great catch! Take your fish to the bag to store them.', sub: 'Press E at the bag. Only stored fish count toward the stage target.', icon: 'key-e', hud: 'fish' };
-      case 'first_crocodile': return { id, title: 'Watch out! Crocodile! Aim and click to throw a rock!', icon: 'warn', hud: 'rocks' };
+      // touch players never see keyboard instructions
+      case 'first_fishing': return touchMode()
+        ? { id, title: "Let's catch some fish! Head to the water and cast your line.", sub: 'Move using the joystick   ·   Face the water and tap FISH   ·   Tap again on the !', icon: 'catch' }
+        : { id, title: "Let's catch some fish! Head to the water and cast your line.", sub: 'Move: WASD or arrows   ·   Aim: mouse   ·   Space to cast, Space again on the !', icon: 'catch' };
+      case 'first_deposit': return touchMode()
+        ? { id, title: 'Great catch! Take your fish to the bag to store them.', sub: 'Tap USE to deposit your fish. Only stored fish count toward the target.', icon: 'key-use', hud: 'fish' }
+        : { id, title: 'Great catch! Take your fish to the bag to store them.', sub: 'Press E at the bag. Only stored fish count toward the stage target.', icon: 'key-e', hud: 'fish' };
+      case 'first_crocodile': return { id, title: touchMode() ? 'Tap ROCK, then tap the crocodile to throw!' : 'Watch out! Crocodile! Aim and click to throw a rock!', icon: 'warn', hud: 'rocks' };
       case 'first_rock_pickup': return { id, title: 'Out of rocks? Walk over stones on the ground to collect more!', icon: 'stones', hud: 'rocks' };
       case 'first_sabapathi_entrance': return { id, title: 'Sabapathi is here! Keep an eye on your fish bag!', icon: 'warn' };
       case 'first_sabapathi_theft': return this.recovering
         ? { id, title: 'He dropped them! Walk over the fish to pick them up.', icon: 'catch', hud: 'carry' }
-        : { id, title: 'Sabapathi stole your fish! Chase him and throw a rock to get them back!', sub: `He is running to his shop with ${this.stolen} of your fish.`, icon: 'warn', hud: 'rocks' };
-      case 'first_shop': return this.shopCard === 'near' ? { id, title: 'Press E to open the shop.', icon: 'key-e' }
+        : { id, title: touchMode() ? 'Sabapathi stole your fish! Chase him, tap ROCK, then tap him!' : 'Sabapathi stole your fish! Chase him and throw a rock to get them back!', sub: `He is running to his shop with ${this.stolen} of your fish.`, icon: 'warn', hud: 'rocks' };
+      case 'first_shop': return this.shopCard === 'near' ? (touchMode() ? { id, title: 'Tap USE to open the shop.', icon: 'key-use' } : { id, title: 'Press E to open the shop.', icon: 'key-e' })
         : this.shopCard === 'afford' ? { id, title: `Sell ${GEAR.net.cost} fish to buy a Fishing Net and catch up to ${GEAR.net.catch} fish at once!`, icon: 'gear', frame: GEAR.net.frame }
         : { id, title: 'New shop unlocked! Sell fish and buy better fishing equipment.', icon: 'gear', frame: GEAR.net.frame };
     }
@@ -178,7 +189,9 @@ export class Tutor {
     }
 
     // ---- dismissing, timing out, and promoting the next one
-    if (Phaser.Input.Keyboard.JustDown(this.keyX) && t.active) { const id = t.skip(); if (id === 'first_crocodile') this.release(); if (id === 'first_sabapathi_theft') { thief.ease = 1; this.recovering = false; } }
+    const skipped = Phaser.Input.Keyboard.JustDown(this.keyX) || this.tapSkip;
+    this.tapSkip = false;
+    if (skipped && t.active) { const id = t.skip(); if (id === 'first_crocodile') this.release(); if (id === 'first_sabapathi_theft') { thief.ease = 1; this.recovering = false; } }
     if (t.active && t.active === this.shown) {
       this.ttl -= dt;
       if (this.ttl <= 0) { if (t.active === 'first_sabapathi_entrance') t.finish(t.active); else t.rest(t.active); } // the warning only has to be seen

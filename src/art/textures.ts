@@ -87,6 +87,8 @@ export function buildTextures(scene: Phaser.Scene, L: Layout) {
   addHD(scene, 'warn', U.warnHD());
   addHD(scene, 'clock', U.clockHD());
   addHD(scene, 'key-q', U.keycapHD('Q'));
+  addHD(scene, 'key-use', U.keycapHD('USE')); // touch prompts name the on-screen buttons
+  addHD(scene, 'key-fish', U.keycapHD('FISH'));
   addHD(scene, 'key-e', U.keycapHD('E'));
   { ORIGIN.sign = addHDSheet(scene, 'sign', S.signHD()); ORIGIN.signA = ORIGIN.signB = ORIGIN.signC = ORIGIN.sign; }
   ORIGIN['stump'] = addHDSheet(scene, 'stump', S.stumpHD());

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { DEPTH, WORLD, PAL, VIEW, ZOOM, CAM_LEAD } from '../config/game';
-import { characterById, RUN, THREAT, ZoneId, ZONES, EVENTS, EventId, CUR, STAGES, GEAR, SHOP_OPENS_STAGE } from '../config/balance';
+import { characterById, RUN, THREAT, ZoneId, ZONES, EVENTS, EventId, CUR, STAGES, GEAR, SHOP_OPENS_STAGE, STONE } from '../config/balance';
 import { GearState, freshGear, cycleGear } from '../systems/Gear';
 import { ShopApi } from './ShopScene';
 import { Layout, DOCKS, SPAWN, POND_C, BAG_POS, SHOP, SHOP_DOOR, GEAR_POS } from '../world/layout';
@@ -27,6 +27,7 @@ import { Totals } from './flow';
 import { audio } from '../systems/Audio';
 import { Tutor } from '../entities/Tutor';
 import { uiText } from './UiScene';
+import { touch, touchMode } from '../systems/Touch';
 
 export class WorldScene extends Phaser.Scene {
   private L!: Layout;
@@ -64,6 +65,11 @@ export class WorldScene extends Phaser.Scene {
   private depositing = false;
   private tutor!: Tutor;
   private keyEsc!: Phaser.Input.Keyboard.Key;
+  /** Touch play: on-screen controls instead of keyboard and mouse. */
+  private touchOn = false;
+  private touchUse: '' | 'deposit' | 'shop' = '';
+  private aimGfx!: Phaser.GameObjects.Graphics;
+  private aimMarks: Phaser.GameObjects.Image[] = [];
   /** Counters read by the automated playtests. */
   stats = { damage: 0, deposits: 0, firstDepositAt: -1, idle: 0, hearts: 3, outcome: '' };
   eventLog: string[] = [];
@@ -169,14 +175,22 @@ export class WorldScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => { ev.off('heist', onHeist); ev.off('prowl', onProwl); });
 
     this.bagLabel = uiText(this, BAG_POS.x, BAG_POS.y - 36, '', 8, '#ffe9a8', true).setOrigin(0.5).setDepth(DEPTH.air + 1);
-    this.prompt = this.add.image(0, 0, 'key-e').setScale(HD).setOrigin(0.5, 1).setDepth(DEPTH.air + 4).setVisible(false);
+    this.touchOn = touchMode();
+    touch.reset();
+    this.touchUse = '';
+    this.aimGfx = this.add.graphics().setDepth(DEPTH.air + 2);
+    this.aimMarks = [];
+    this.prompt = this.add.image(0, 0, this.touchOn ? 'key-use' : 'key-e').setScale(HD).setOrigin(0.5, 1).setDepth(DEPTH.air + 4).setVisible(false);
     this.promptLabel = uiText(this, 0, 0, 'Shop', 7, '#fff6d8', true).setOrigin(0, 0.5).setDepth(DEPTH.air + 4).setVisible(false);
     this.tipQueue = [];
     this.bagChanged();
 
     this.input.setDefaultCursor('none');
     this.input.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
-      if (this.attract || this.over || !ptr.leftButtonDown()) return;
+      if (this.attract || this.over) return;
+      // touch: a tap on the world only matters while ROCK is aiming (the joystick and buttons keep their own touches)
+      if (this.touchOn) { if (touch.aiming && !touch.claimed.has(ptr.id)) this.tapThrow(ptr); return; }
+      if (!ptr.leftButtonDown()) return;
       const w = ptr.positionToCamera(this.cameras.main) as Phaser.Math.Vector2;
       // throwing never drops the line: you can defend yourself mid-cast
       if (this.player.canAct || this.fishing.busy) this.tutor.onThrow(this.stones.throwAt(w.x, w.y));
@@ -207,7 +221,7 @@ export class WorldScene extends Phaser.Scene {
     const shake = cam.shake.bind(cam);
     cam.shake = ((...args: Parameters<typeof cam.shake>) => (load().shake ? shake(...args) : cam)) as typeof cam.shake;
     this.events.off('resume');
-    this.events.on('resume', () => { this.keyEsc.reset(); this.input2.reset(); this.bagChanged(); this.emitGear(); this.tutor.sync(); }); // also after the gear stall closes
+    this.events.on('resume', () => { this.touchOn = touchMode(); this.prompt.setTexture(this.touchOn ? 'key-use' : 'key-e'); this.keyEsc.reset(); this.input2.reset(); this.bagChanged(); this.emitGear(); this.tutor.sync(); }); // also after the gear stall closes
     if (this.attract) {
       // menu backdrop: nobody on stage, the camera drifts slowly around the pond
       this.player.sprite.setVisible(false); this.player.shadow.setVisible(false);
@@ -306,6 +320,7 @@ export class WorldScene extends Phaser.Scene {
   private interact(pressed: boolean) {
     const canBag = this.nearBag && this.eco.carried > 0 && !this.depositing;
     const atStall = !canBag && this.nearStall;
+    this.touchUse = canBag ? 'deposit' : atStall ? 'shop' : '';
     this.prompt.setVisible((canBag || atStall) && !this.fishing.busy);
     const bob = Math.round(Math.sin(this.time.now / 260));
     if (canBag) this.prompt.setPosition(BAG_POS.x, BAG_POS.y - 44 + bob);
@@ -365,6 +380,73 @@ export class WorldScene extends Phaser.Scene {
     this.emitGear();
   }
 
+  // ---------------------------------------------------------------- touch controls
+  /** Esc, or the touch pause button. */
+  pauseGame() {
+    if (this.attract || this.over || !this.started) return;
+    this.scene.launch('pause');
+    this.scene.pause();
+  }
+  /** What the on-screen controls need to show. */
+  touchInfo() {
+    return {
+      playing: this.started && !this.over && !this.attract,
+      fish: this.fishing.touchState,
+      use: this.touchUse,
+      gearOwned: this.gear.owned.length,
+      gearFrame: GEAR[this.gear.equipped].frame,
+      rocks: this.stones.ammo,
+    };
+  }
+  /** ROCK: start aiming (the next tap on a crocodile or Sabapathi throws), or cancel without spending a rock. */
+  touchRock() {
+    if (this.attract || this.over || !this.started) return;
+    if (touch.aiming) { touch.aiming = false; audio.play('uiMove'); return; }
+    if (this.stones.ammo <= 0) { this.stones.noRocks(); return; }
+    touch.aiming = true;
+    audio.play('uiSelect');
+    this.float(this.player.x, this.player.y - 40, this.tapTargets().length ? 'TAP A TARGET' : 'TAP A CROCODILE OR SABAPATHI', '#ffe9a8');
+  }
+  /** Crocodiles and a raiding Sabapathi that can be seen, so can be tapped. */
+  private tapTargets(): (Crocodile | Thief)[] {
+    const crocs = this.crocs.list.filter((c) => c.sprite.active && c.sprite.alpha > 0.15); // still surfacing counts: it can be seen
+    const t = this.sabapathi;
+    return t.onRaid && t.sprite.visible && t.sprite.alpha > 0.3 ? [...crocs, t] : crocs;
+  }
+  /** A tap while aiming: throw at the target's position right now (a moving target can still be missed). */
+  private tapThrow(ptr: Phaser.Input.Pointer) {
+    const w = ptr.positionToCamera(this.cameras.main) as Phaser.Math.Vector2, p = this.player;
+    let best: Crocodile | Thief | null = null, bd = 30; // generous: a fingertip covers a lot of pond
+    for (const t of this.tapTargets()) { const d = Math.hypot(t.x - w.x, t.y - 8 - w.y); if (d < bd) { bd = d; best = t; } }
+    if (!best) { touch.aiming = false; this.float(w.x, w.y - 6, 'AIM CANCELLED', '#c9d4b8'); return; } // nothing there: no rock spent
+    if (Math.hypot(best.x - p.x, best.y - p.y) > STONE.range) { this.float(best.x, best.y - 30, 'TOO FAR! GET CLOSER', '#ffb0a0'); audio.play('deny'); return; }
+    if (!(p.canAct || this.fishing.busy) || this.stones.cooldown > 0) return; // still aiming; tap again in a moment
+    const ok = this.stones.throwAt(best.x, best.y - 4, true);
+    if (ok || this.stones.ammo <= 0) touch.aiming = false;
+    this.tutor.onThrow(ok);
+  }
+  /** While aiming: the throwing range around the fisherman, and a reticle on everything that can be hit. */
+  private drawAim(time: number) {
+    const g = this.aimGfx;
+    g.clear();
+    if (touch.aiming && (this.stones.ammo <= 0 || !this.player.alive)) touch.aiming = false;
+    const targets = touch.aiming ? this.tapTargets() : [];
+    this.aimMarks.forEach((m, i) => m.setVisible(i < targets.length));
+    if (!touch.aiming) return;
+    const p = this.player, R = STONE.range, pulse = Math.sin(time / 180);
+    // dashed throwing range: a dark underlay so it reads over bright water and grass alike
+    const dash = (w: number, col: number, al: number) => {
+      g.lineStyle(w, col, al);
+      for (let i = 0; i < 48; i += 2) { const a0 = (i / 48) * Math.PI * 2 + time / 4000, a1 = a0 + (Math.PI * 2) / 48; g.beginPath(); g.arc(p.x, p.y - 4, R, a0, a1); g.strokePath(); }
+    };
+    dash(2.6, 0x1a1220, 0.35); dash(1.3, 0xffe9a8, 0.75 + 0.15 * pulse);
+    targets.forEach((t, i) => {
+      const m = this.aimMarks[i] ?? (this.aimMarks[i] = this.add.image(0, 0, 'reticle').setDepth(DEPTH.air + 5));
+      const near = Math.hypot(t.x - p.x, t.y - p.y) <= R;
+      m.setPosition(Math.round(t.x), Math.round(t.y - 8)).setScale(HD * (1.3 + 0.12 * pulse)).setTint(near ? 0xffe36a : 0xa89fb4).setAlpha(near ? 1 : 0.55).setVisible(true);
+    });
+  }
+
   /** Bitten: lose a heart and drop whatever you were carrying. */
   private onBite() {
     this.fishing.cancel();
@@ -415,6 +497,7 @@ export class WorldScene extends Phaser.Scene {
     let done = false;
     const finish = () => { if (done) return; done = true; this.scene.launch('result', result); };
     this.input.keyboard!.once('keydown-SPACE', finish);
+    if (this.touchOn) this.input.once('pointerdown', finish); // a tap skips on touch screens
     const at = (ms: number, fn: () => void) => this.time.delayedCall(ms, () => { if (!done) fn(); });
     cam.fadeOut(350, 22, 38, 29);
     at(400, () => {
@@ -478,7 +561,7 @@ export class WorldScene extends Phaser.Scene {
     this.ambient.update(dt, time);
     if (this.attract) { this.sabapathi.update(dt, time, { elapsed: 0, fishing: false }); return; }
     if (this.over || !this.started) return; // frozen: stage intro, stage-complete and result screens
-    if (Phaser.Input.Keyboard.JustDown(this.keyEsc)) { this.scene.launch('pause'); this.scene.pause(); return; }
+    if (Phaser.Input.Keyboard.JustDown(this.keyEsc)) { this.pauseGame(); return; }
 
     // ---- the clock
     this.elapsed += dt; this.sinceHit += dt;
@@ -490,8 +573,8 @@ export class WorldScene extends Phaser.Scene {
     const interactPressed = this.input2.interactPressed;
     if (this.input2.swapPressed) this.swapGear();
     this.player.update(dt);
-    const aim = this.input.activePointer.positionToCamera(this.cameras.main) as Phaser.Math.Vector2;
-    this.fishing.aim = { x: aim.x, y: aim.y };
+    if (this.touchOn) this.fishing.aim = this.fishing.autoAim(); // no cursor: cast where he faces
+    else { const aim = this.input.activePointer.positionToCamera(this.cameras.main) as Phaser.Math.Vector2; this.fishing.aim = { x: aim.x, y: aim.y }; }
     this.fishing.update(dt, time);
     this.zones.update(dt, this.fishing.fishingZone);
     this.interact(interactPressed);
@@ -509,6 +592,7 @@ export class WorldScene extends Phaser.Scene {
     if (this.clock.tick(dt, this.elapsed, interval, crocMax, this.crocs.list.length)) this.crocs.spawn(zone);
     this.crocs.update(dt, time, band.crocSpeed * CUR.crocSpeedMul);
     this.stones.update(dt);
+    if (this.touchOn) this.drawAim(time);
     this.loot.update(dt);
     this.sabapathi.update(dt, time, { elapsed: this.elapsed, fishing: this.fishing.busy });
     this.runEvents(dt, time);

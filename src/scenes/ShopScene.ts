@@ -5,6 +5,7 @@ import { GearState, sellFish, buyGear, equipGear, shopHint } from '../systems/Ge
 import { Economy } from '../systems/Economy';
 import { audio } from '../systems/Audio';
 import { UiScene } from './UiScene';
+import { touchMode } from '../systems/Touch';
 import { HD } from '../art/hd';
 
 export interface ShopApi { eco: Economy; gear: GearState; }
@@ -95,7 +96,7 @@ export class ShopScene extends UiScene {
     }, { disabled: eco.stored < n });
     sell(1, cx - 63, 3); sell(5, cx + 63, 4);
     ry += 21;
-    this.sans(cx, ry, this.note || 'Q switches equipment while you fish.', 7, this.note ? (this.noteGood ? '#9ff08a' : '#ff9a8a') : '#c9d4b8', false, true);
+    this.sans(cx, ry, this.note || (touchMode() ? 'GEAR switches equipment while you fish.' : 'Q switches equipment while you fish.'), 7, this.note ? (this.noteGood ? '#9ff08a' : '#ff9a8a') : '#c9d4b8', false, true);
     this.button(cx, ry + 12, 96, 'Close', () => this.close(), { style: 'primary', h: 18 });
     // start on the step the player should take next
     const next = hint.next ? GEAR_ORDER.indexOf(hint.next) : -1;

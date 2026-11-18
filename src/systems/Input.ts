@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
+import { touch } from './Touch';
 
-/** Keyboard intent, decoupled from key codes so touch / gamepad can slot in later. */
+/** Player intent from the keyboard or the on-screen touch controls (see Touch.ts). */
 export class Input {
   private keys: Record<string, Phaser.Input.Keyboard.Key>;
   constructor(scene: Phaser.Scene) {
@@ -11,12 +12,12 @@ export class Input {
       dash: K.SHIFT, action: K.SPACE, pause: K.ESC, interact: K.E, swap: K.Q,
     }) as Record<string, Phaser.Input.Keyboard.Key>;
   }
-  /** Forget held / just-pressed keys (after a pause, so nothing fires twice). */
-  reset() { Object.values(this.keys).forEach((k) => k.reset()); }
-  get moveX() { return (this.keys.right.isDown || this.keys.right2.isDown ? 1 : 0) - (this.keys.left.isDown || this.keys.left2.isDown ? 1 : 0); }
-  get moveY() { return (this.keys.down.isDown || this.keys.down2.isDown ? 1 : 0) - (this.keys.up.isDown || this.keys.up2.isDown ? 1 : 0); }
-  get dashPressed() { return Phaser.Input.Keyboard.JustDown(this.keys.dash); }
-  get swapPressed() { return Phaser.Input.Keyboard.JustDown(this.keys.swap); }
-  get interactPressed() { return Phaser.Input.Keyboard.JustDown(this.keys.interact); }
-  get actionPressed() { return Phaser.Input.Keyboard.JustDown(this.keys.action); }
+  /** Forget held / just-pressed keys and touches (after a pause, so nothing fires twice). */
+  reset() { Object.values(this.keys).forEach((k) => k.reset()); touch.reset(); }
+  get moveX() { return (this.keys.right.isDown || this.keys.right2.isDown ? 1 : 0) - (this.keys.left.isDown || this.keys.left2.isDown ? 1 : 0) || touch.mx; }
+  get moveY() { return (this.keys.down.isDown || this.keys.down2.isDown ? 1 : 0) - (this.keys.up.isDown || this.keys.up2.isDown ? 1 : 0) || touch.my; }
+  get dashPressed() { return Phaser.Input.Keyboard.JustDown(this.keys.dash) || touch.take('dash'); }
+  get swapPressed() { return Phaser.Input.Keyboard.JustDown(this.keys.swap) || touch.take('gear'); }
+  get interactPressed() { return Phaser.Input.Keyboard.JustDown(this.keys.interact) || touch.take('use'); }
+  get actionPressed() { return Phaser.Input.Keyboard.JustDown(this.keys.action) || touch.take('fish'); }
 }

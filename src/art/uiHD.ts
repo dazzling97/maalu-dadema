@@ -214,3 +214,76 @@ export function logoHD(sinhala: boolean): { canvas: HTMLCanvasElement; w: number
   }
   return { canvas: c, w, h };
 }
+
+// ---------------------------------------------------------------- touch controls
+/**
+ * A round touch button: smoked plum glass the world shows through, a soft drop
+ * shadow and a rim. `state`: 0 resting, 1 held down, 2 ready / active (gold rim and glow).
+ * `r` is the radius in world units; the canvas is padded for the shadow and glow.
+ */
+export function touchButtonHD(r: number, state: 0 | 1 | 2): HTMLCanvasElement {
+  const pad = 4, d = 2 * (r + pad), [c, x] = hdCanvas(d, d), cx = r + pad, cy = r + pad;
+  const disc = ell(cx, cy, r, r);
+  x.save(); x.shadowColor = state === 2 ? 'rgba(255,214,90,0.7)' : 'rgba(6,4,12,0.5)'; x.shadowBlur = state === 2 ? 6 : 4; x.shadowOffsetY = state === 2 ? 0 : 1.2;
+  x.fillStyle = 'rgba(20,14,28,0.5)'; x.fill(disc); x.restore();
+  const g = x.createRadialGradient(cx - r * 0.3, cy - r * 0.4, r * 0.1, cx, cy, r);
+  if (state === 1) { g.addColorStop(0, 'rgba(110,90,132,0.82)'); g.addColorStop(1, 'rgba(52,40,70,0.86)'); }
+  else { g.addColorStop(0, 'rgba(70,56,92,0.62)'); g.addColorStop(1, 'rgba(22,16,32,0.72)'); }
+  x.fillStyle = g; x.fill(disc);
+  // a glassy sheen across the top half
+  x.save(); x.clip(disc); x.fillStyle = lin(x, 0, cy - r, 0, cy, [[0, `rgba(255,255,255,${state === 1 ? 0.08 : 0.16})`], [1, 'rgba(255,255,255,0)']]); x.fill(ell(cx, cy - r * 0.45, r * 0.82, r * 0.5)); x.restore();
+  x.strokeStyle = state === 2 ? '#f6d24a' : state === 1 ? 'rgba(255,243,176,0.85)' : 'rgba(246,231,193,0.55)';
+  x.lineWidth = state === 2 ? 0.9 : 0.6; x.stroke(ell(cx, cy, r - 0.4, r - 0.4));
+  return c;
+}
+/** The joystick: a shallow ring with direction notches (`r` = travel radius), and the thumb knob. */
+export function stickBaseHD(r: number): HTMLCanvasElement {
+  const pad = 3, d = 2 * (r + pad), [c, x] = hdCanvas(d, d), cx = r + pad, cy = r + pad;
+  const g = x.createRadialGradient(cx, cy, r * 0.2, cx, cy, r);
+  g.addColorStop(0, 'rgba(20,14,28,0.18)'); g.addColorStop(0.75, 'rgba(20,14,28,0.36)'); g.addColorStop(1, 'rgba(20,14,28,0.5)');
+  x.fillStyle = g; x.fill(ell(cx, cy, r, r));
+  x.strokeStyle = 'rgba(246,231,193,0.5)'; x.lineWidth = 0.7; x.stroke(ell(cx, cy, r - 0.4, r - 0.4));
+  x.strokeStyle = 'rgba(246,231,193,0.16)'; x.lineWidth = 0.5; x.stroke(ell(cx, cy, r * 0.55, r * 0.55));
+  x.fillStyle = 'rgba(246,231,193,0.55)';
+  for (let i = 0; i < 4; i++) { // small chevrons at the four compass points
+    const a = (i * Math.PI) / 2, px = cx + Math.cos(a) * (r - 4), py = cy + Math.sin(a) * (r - 4), s = Math.max(1.6, r * 0.07);
+    const p = new Path2D(); p.moveTo(px + Math.cos(a) * s, py + Math.sin(a) * s);
+    p.lineTo(px + Math.cos(a + 2.3) * s, py + Math.sin(a + 2.3) * s); p.lineTo(px + Math.cos(a - 2.3) * s, py + Math.sin(a - 2.3) * s); p.closePath(); x.fill(p);
+  }
+  return c;
+}
+export function stickKnobHD(r: number): HTMLCanvasElement {
+  const pad = 3, d = 2 * (r + pad), [c, x] = hdCanvas(d, d), cx = r + pad, cy = r + pad, disc = ell(cx, cy, r, r);
+  x.save(); x.shadowColor = 'rgba(6,4,12,0.55)'; x.shadowBlur = 4; x.shadowOffsetY = 1.4; x.fillStyle = '#000'; x.fill(disc); x.restore();
+  const g = x.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.1, cx, cy, r);
+  g.addColorStop(0, 'rgba(255,246,214,0.95)'); g.addColorStop(0.5, 'rgba(232,206,150,0.92)'); g.addColorStop(1, 'rgba(176,138,86,0.95)');
+  x.fillStyle = g; x.fill(disc);
+  ink(x, disc, 0.6, 'rgba(60,32,20,0.9)');
+  x.strokeStyle = 'rgba(120,88,52,0.45)'; x.lineWidth = 0.5; x.stroke(ell(cx, cy, r * 0.55, r * 0.55)); // a dished grip
+  return c;
+}
+/** Icons drawn for the touch buttons that have no game sprite: dash chevrons, pause bars, a coin-stall for the shop. */
+export function touchIconHD(kind: 'dash' | 'pause' | 'use', s: number): HTMLCanvasElement {
+  const [c, x] = hdCanvas(s, s);
+  x.lineJoin = 'round'; x.lineCap = 'round';
+  if (kind === 'pause') {
+    const w = s * 0.2, h = s * 0.62, y = (s - h) / 2;
+    for (const px of [s * 0.27, s * 0.53]) { const b = rr(px, y, w, h, w * 0.4); x.fillStyle = '#fff3d6'; x.fill(b); ink(x, b, 0.5); }
+  } else if (kind === 'dash') {
+    x.strokeStyle = 'rgba(26,18,32,0.95)'; x.lineWidth = s * 0.2;
+    const chev = (ox: number) => { x.beginPath(); x.moveTo(ox, s * 0.22); x.lineTo(ox + s * 0.24, s * 0.5); x.lineTo(ox, s * 0.78); x.stroke(); };
+    chev(s * 0.2); chev(s * 0.5);
+    x.strokeStyle = '#fff3d6'; x.lineWidth = s * 0.11; chev(s * 0.2); chev(s * 0.5);
+  } else {
+    // an open hand: "do the thing here"
+    const p = new Path2D();
+    p.moveTo(s * 0.3, s * 0.9); p.lineTo(s * 0.24, s * 0.5); p.quadraticCurveTo(s * 0.2, s * 0.4, s * 0.28, s * 0.4);
+    p.lineTo(s * 0.34, s * 0.52); p.lineTo(s * 0.34, s * 0.2); p.quadraticCurveTo(s * 0.4, s * 0.12, s * 0.45, s * 0.2);
+    p.lineTo(s * 0.46, s * 0.44); p.lineTo(s * 0.48, s * 0.14); p.quadraticCurveTo(s * 0.54, s * 0.07, s * 0.59, s * 0.15);
+    p.lineTo(s * 0.59, s * 0.44); p.lineTo(s * 0.62, s * 0.2); p.quadraticCurveTo(s * 0.68, s * 0.13, s * 0.72, s * 0.22);
+    p.lineTo(s * 0.71, s * 0.48); p.lineTo(s * 0.74, s * 0.33); p.quadraticCurveTo(s * 0.8, s * 0.28, s * 0.82, s * 0.37);
+    p.lineTo(s * 0.78, s * 0.66); p.quadraticCurveTo(s * 0.74, s * 0.84, s * 0.66, s * 0.9); p.closePath();
+    x.fillStyle = lin(x, 0, 0, 0, s, [[0, '#fff3d6'], [1, '#e7cfa0']]); x.fill(p); ink(x, p, Math.max(0.5, s * 0.05));
+  }
+  return c;
+}

@@ -3,6 +3,7 @@ import { VIEW } from '../config/game';
 import { RUN, STAGES, CUR } from '../config/balance';
 import { fmtTime, load } from '../systems/Storage';
 import { UiScene } from './UiScene';
+import { touchMode } from '../systems/Touch';
 import { startRun, nextStage, retryStage, goMenu, Totals } from './flow';
 
 export interface RunResult {
@@ -52,7 +53,7 @@ export class ResultScene extends UiScene {
     else if (r.mode === 'fail') this.button(cx - 54, by - 2, 100, 'Retry stage', () => retryStage(this), { style: 'primary' });
     else this.button(cx - 54, by - 2, 100, 'Play again', () => startRun(this), { style: 'primary' });
     this.button(cx + 54, by, 100, 'Main menu', () => goMenu(this));
-    this.sans(cx, y + 157, 'Arrow keys to choose, Enter to select', 6.5, '#c9d4b8', false, true);
+    if (!touchMode()) this.sans(cx, y + 157, 'Arrow keys to choose, Enter to select', 6.5, '#c9d4b8', false, true);
     this.root.setAlpha(0).setY(-10);
     this.tweens.add({ targets: this.root, alpha: 1, y: 0, duration: 380, ease: 'Cubic.out' });
     // ignore the keys the player was holding when the stage ended
