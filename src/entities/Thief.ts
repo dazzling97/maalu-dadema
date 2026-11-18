@@ -57,7 +57,7 @@ export class Thief {
     this.home = { x: SHOP.x - 6, y: SHOP.y + 12 };
     this.x = this.home.x; this.y = this.home.y;
     this.shadow = scene.add.image(this.x, this.y, 'shadow').setScale(HD).setDepth(DEPTH.flat + 2);
-    this.sprite = scene.add.sprite(this.x, this.y, 'sabapathi', 0).setOrigin(ORIGIN.sabapathi.x, ORIGIN.sabapathi.y);
+    this.sprite = scene.add.sprite(this.x, this.y, 'sabapathi', 0).setOrigin(ORIGIN.sabapathi.x, ORIGIN.sabapathi.y).setScale(HD);
     this.sack = scene.add.image(this.x, this.y, 'loot').setOrigin(0.5, 1).setVisible(false);
     for (let k = 0; k < 2; k++) this.stars.push(scene.add.sprite(0, 0, 'sparkle', 1).setDepth(DEPTH.air + 4).setVisible(false));
 
@@ -220,7 +220,7 @@ export class Thief {
 
     const st = this.fsm.current, s = this.sprite;
     const sneaking = st === 'sneaking';
-    const anim = st === 'stealing' ? 'fish' : this.moving ? 'walk' : 'idle';
+    const anim = st === 'stunned' ? 'hurt' : st === 'stealing' ? 'fish' : this.moving ? 'walk' : 'idle';
     s.play(`sabapathi-${anim}-${this.facing}`, true);
     s.anims.timeScale = sneaking ? 0.55 : st === 'escaping' ? 1.5 : st === 'retreating' ? 2 : 1;
     const tiptoe = sneaking && this.moving ? -Math.abs(Math.round(Math.sin(time / 110))) : 0;

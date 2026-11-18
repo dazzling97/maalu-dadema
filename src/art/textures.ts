@@ -1,13 +1,14 @@
 import Phaser from 'phaser';
 import { VIEW } from '../config/game';
 import { Layout, DOCKS } from '../world/layout';
-import { addHD } from './hd';
+import { addHD, ART } from './hd';
+import { charSheetHD, HCHAR, HCOL } from './charactersHD';
 import { paintGroundHD } from './groundHD';
 import { waterMasks, rippleTile, swellTile, foamTile, glintCanvas, raysHD, gradeHD, vignetteHD, shadowHD } from './waterHD';
 import * as P from './props';
 import { FISH } from '../config/balance';
 import { keycap } from './ui';
-import { charSheet, SPECS, CHAR_FW, CHAR_FH, CHAR_COLS, DIRS } from './characters';
+import { SPECS, DIRS } from './characters';
 
 /** Origins (ground-contact point, 0..1) for every sheet, keyed by texture. */
 export const ORIGIN: Record<string, { x: number; y: number }> = {};
@@ -108,12 +109,19 @@ export function buildTextures(scene: Phaser.Scene, L: Layout) {
   addHD(scene, 'vignette', vignetteHD(VIEW.w, VIEW.h));
 
   for (const id of Object.keys(SPECS)) {
-    addSheet(scene, id, { canvas: charSheet(SPECS[id]), fw: CHAR_FW, fh: CHAR_FH, ox: 13, oy: 31 });
+    // high-resolution villagers (charactersHD.ts): frames are ART x larger, shown at HD scale
+    const tex = addHD(scene, id, charSheetHD(SPECS[id]));
+    const FW = HCHAR.fw * ART, FH = HCHAR.fh * ART;
+    for (let r = 0, n = 0; r < DIRS.length; r++) for (let c = 0; c < HCOL.count; c++) tex.add(n++, 0, c * FW, r * FH, FW, FH);
+    ORIGIN[id] = { x: HCHAR.ox / HCHAR.fw, y: HCHAR.oy / HCHAR.fh };
     DIRS.forEach((dir, row) => {
-      const b = row * CHAR_COLS;
-      scene.anims.create({ key: `${id}-idle-${dir}`, frames: frames(id, [b, b + 1]), frameRate: 2.2, repeat: -1 });
-      scene.anims.create({ key: `${id}-walk-${dir}`, frames: frames(id, [b + 2, b + 3, b + 4, b + 5]), frameRate: 9, repeat: -1 });
-      scene.anims.create({ key: `${id}-fish-${dir}`, frames: frames(id, [b + 6, b + 7]), frameRate: 2.2, repeat: -1 });
+      const b = row * HCOL.count, f = (i: number, duration?: number) => ({ key: id, frame: b + i, duration });
+      // breathe, and blink now and then
+      scene.anims.create({ key: `${id}-idle-${dir}`, frames: [f(0, 700), f(1, 700), f(0, 700), f(1, 560), f(2, 140)], repeat: -1 });
+      scene.anims.create({ key: `${id}-walk-${dir}`, frames: [3, 4, 5, 6, 7, 8].map((i) => f(i)), frameRate: 11, repeat: -1 });
+      scene.anims.create({ key: `${id}-fish-${dir}`, frames: [f(HCOL.fish), f(HCOL.fish + 1)], frameRate: 2.2, repeat: -1 });
+      scene.anims.create({ key: `${id}-throw-${dir}`, frames: [f(HCOL.throw)], frameRate: 1 });
+      scene.anims.create({ key: `${id}-hurt-${dir}`, frames: [f(HCOL.hurt)], frameRate: 1 });
     });
   }
 

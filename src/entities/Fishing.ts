@@ -103,38 +103,25 @@ export class Fishing {
   }
 
   // ------------------------------------------------------------------ effects
-  private pixelLine(a: Pt, b: Pt, color: number) {
-    let x0 = Math.round(a.x), y0 = Math.round(a.y);
-    const x1 = Math.round(b.x), y1 = Math.round(b.y);
-    const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
-    let e = dx + dy;
-    this.gfx.fillStyle(color, 1);
-    for (let i = 0; i < 400; i++) {
-      this.gfx.fillRect(x0, y0, 1, 1);
-      if (x0 === x1 && y0 === y1) break;
-      const e2 = 2 * e;
-      if (e2 >= dy) { e += dy; x0 += sx; }
-      if (e2 <= dx) { e += dx; y0 += sy; }
-    }
-  }
   private draw() {
     this.gfx.clear();
     if (this.state === 'none') return;
     const { hand, tip } = this.rod();
     const depth = DEPTH.sorted + Math.max(this.player.y, this.bobPos.y) + 2;
     this.gfx.setDepth(depth);
-    this.pixelLine(hand, tip, 0x8b5e3c);
-    this.gfx.fillStyle(0xe8e8e8, 1); this.gfx.fillRect(Math.round(tip.x), Math.round(tip.y), 1, 1);
+    // the rod: a dark edge under a lighter core, smooth at any angle
+    this.gfx.lineStyle(1.05, 0x5e3c22, 1).lineBetween(hand.x, hand.y, tip.x, tip.y);
+    this.gfx.lineStyle(0.5, 0xa8744a, 1).lineBetween(hand.x, hand.y, tip.x, tip.y);
+    this.gfx.fillStyle(0xf4f1e6, 1).fillCircle(tip.x, tip.y, 0.45);
     if (this.state === 'end') return;
     // fishing line: sags while waiting, snaps taut on a bite
     const sag = this.taut ? 0 : 7;
-    let prev = tip;
-    for (let i = 1; i <= 10; i++) {
-      const u = i / 10, v = 1 - u;
-      const pt = { x: v * tip.x + u * this.bobPos.x, y: v * tip.y + u * (this.bobPos.y - 3) + Math.sin(Math.PI * u) * sag };
-      this.pixelLine(prev, pt, 0xf6f1e0);
-      prev = pt;
+    const pts: Phaser.Math.Vector2[] = [];
+    for (let i = 0; i <= 16; i++) {
+      const u = i / 16, v = 1 - u;
+      pts.push(new Phaser.Math.Vector2(v * tip.x + u * this.bobPos.x, v * tip.y + u * (this.bobPos.y - 3) + Math.sin(Math.PI * u) * sag));
     }
+    this.gfx.lineStyle(0.4, 0xf6f1e0, 0.9).strokePoints(pts, false, false);
   }
   private splash(p: Pt, n: number, power: number) {
     for (let i = 0; i < n; i++) {

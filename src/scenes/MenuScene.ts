@@ -7,6 +7,8 @@ import { keycap } from '../art/ui';
 import { load, save, fmtTime } from '../systems/Storage';
 import { audio } from '../systems/Audio';
 import { UiScene } from './UiScene';
+import { HD } from '../art/hd';
+import { SPECS } from '../art/characters';
 import { startRun } from './flow';
 
 type Screen = 'main' | 'chars' | 'how' | 'settings' | 'scores';
@@ -147,7 +149,7 @@ export class MenuScene extends UiScene {
       card.setInteractive().on('pointerdown', () => { this.charIdx = i; audio.play('uiMove'); this.show('chars'); });
       const [g, gc] = makeCanvas(4, 4); rect(gc, 0, 0, 4, 4, on ? '#62a645' : '#3f6a3a');
       this.root.add(this.add.image(x + 8, 42, this.tx(g)).setOrigin(0).setScale(26, 24));
-      const sp = this.add.sprite(x + 60, 134, ch.id, 0).setOrigin(0.5, 1).setScale(3);
+      const sp = this.add.sprite(x + 60, 134, ch.id, 0).setOrigin(0.5, 1).setScale(3 * HD);
       sp.play(`${ch.id}-${on ? 'walk' : 'idle'}-down`);
       if (!on) sp.setAlpha(0.7);
       this.root.add(sp);
@@ -187,7 +189,7 @@ export class MenuScene extends UiScene {
     this.panel(x, y, w, h, true);
     const [g, gc] = makeCanvas(4, 4); rect(gc, 0, 0, 4, 4, this.card === 0 ? '#2b8a9e' : '#62a645');
     this.root.add(this.add.image(x + 12, y + 12, this.tx(g)).setOrigin(0).setScale(69, 20));
-    const art = (key: string, ax: number, ay: number, frame: number | string = 0, scale = 2) => { const s = this.add.sprite(x + ax, y + ay, key, frame).setScale(scale); this.root.add(s); return s; };
+    const art = (key: string, ax: number, ay: number, frame: number | string = 0, scale = 2) => { const s = this.add.sprite(x + ax, y + ay, key, frame).setScale(key in SPECS ? scale * HD : scale); this.root.add(s); return s; };
     const hero = load().charId;
     if (this.card === 0) {
       const [l, lc] = makeCanvas(4, 4); rect(lc, 0, 0, 4, 4, '#62a645');
