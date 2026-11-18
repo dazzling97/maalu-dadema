@@ -5,6 +5,7 @@ import { Layout } from '../world/layout';
 import { ORIGIN } from '../art/textures';
 import { Dir } from '../art/characters';
 import { StateMachine } from '../systems/StateMachine';
+import { HD } from '../art/hd';
 import { Input } from '../systems/Input';
 
 type PState = 'idle' | 'walk' | 'dash' | 'fishing' | 'hurt' | 'down';
@@ -27,7 +28,7 @@ export class Player {
 
   constructor(private scene: Phaser.Scene, private L: Layout, private input: Input, readonly def: CharacterDef, x: number, y: number) {
     this.x = x; this.y = y;
-    this.shadow = scene.add.image(x, y, 'shadow').setDepth(DEPTH.flat + 2);
+    this.shadow = scene.add.image(x, y, 'shadow').setScale(HD).setDepth(DEPTH.flat + 2);
     this.sprite = scene.add.sprite(x, y, def.id, 0).setOrigin(ORIGIN[def.id].x, ORIGIN[def.id].y);
     for (let i = 0; i < 8; i++) this.puffs.push(scene.add.sprite(0, 0, 'puff', 0).setVisible(false).setOrigin(0.5, 0.7));
 

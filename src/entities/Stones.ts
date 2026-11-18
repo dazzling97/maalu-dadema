@@ -3,6 +3,7 @@ import { DEPTH } from '../config/game';
 import { STONE, RUN } from '../config/balance';
 import { Layout } from '../world/layout';
 import { Player } from './Player';
+import { HD } from '../art/hd';
 import { audio } from '../systems/Audio';
 
 interface Shot { img: Phaser.GameObjects.Image; shadow: Phaser.GameObjects.Image; x: number; y: number; vx: number; vy: number; t: number; life: number; }
@@ -83,7 +84,7 @@ export class Stones {
     const dx = tx - sx, dy = ty - sy, len = Math.hypot(dx, dy) || 1;
     const dist = Math.min(STONE.range, Math.max(24, len));
     const img = this.scene.add.image(sx, sy, 'stone');
-    const shadow = this.scene.add.image(sx, sy, 'shadow').setScale(0.4).setDepth(DEPTH.flat + 2);
+    const shadow = this.scene.add.image(sx, sy, 'shadow').setScale(0.4 * HD).setDepth(DEPTH.flat + 2);
     this.shots.push({ img, shadow, x: sx, y: sy, vx: (dx / len) * STONE.speed, vy: (dy / len) * STONE.speed, t: 0, life: dist / STONE.speed });
     return true;
   }

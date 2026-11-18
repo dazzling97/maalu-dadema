@@ -10,6 +10,7 @@ import { theftUrge, grabSize, bandAt } from '../systems/Director';
 import { Economy } from '../systems/Economy';
 import { Player } from './Player';
 import { Loot } from './Loot';
+import { HD } from '../art/hd';
 import { audio } from '../systems/Audio';
 
 export type TState = 'waiting' | 'approaching' | 'sneaking' | 'stealing' | 'escaping' | 'stunned' | 'retreating' | 'inside';
@@ -55,7 +56,7 @@ export class Thief {
   ) {
     this.home = { x: SHOP.x - 6, y: SHOP.y + 12 };
     this.x = this.home.x; this.y = this.home.y;
-    this.shadow = scene.add.image(this.x, this.y, 'shadow').setDepth(DEPTH.flat + 2);
+    this.shadow = scene.add.image(this.x, this.y, 'shadow').setScale(HD).setDepth(DEPTH.flat + 2);
     this.sprite = scene.add.sprite(this.x, this.y, 'sabapathi', 0).setOrigin(ORIGIN.sabapathi.x, ORIGIN.sabapathi.y);
     this.sack = scene.add.image(this.x, this.y, 'loot').setOrigin(0.5, 1).setVisible(false);
     for (let k = 0; k < 2; k++) this.stars.push(scene.add.sprite(0, 0, 'sparkle', 1).setDepth(DEPTH.air + 4).setVisible(false));

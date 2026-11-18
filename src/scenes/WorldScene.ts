@@ -6,6 +6,8 @@ import { ShopApi } from './ShopScene';
 import { Layout, DOCKS, SPAWN, POND_C, BAG_POS, SHOP, SHOP_DOOR, GEAR_POS } from '../world/layout';
 import { ORIGIN } from '../art/textures';
 import { WATER_BOX } from '../art/water';
+import { HD } from '../art/hd';
+import { GROUND_TILE, GROUND_COLS, GROUND_ROWS } from '../art/groundHD';
 import { Player } from '../entities/Player';
 import { Thief } from '../entities/Thief';
 import { Ambient } from '../entities/Ambient';
@@ -73,8 +75,10 @@ export class WorldScene extends Phaser.Scene {
     const L = this.L;
     const pick = (n: number) => Math.floor(n * 7919) % 3;
 
-    this.add.image(0, 0, 'ground').setOrigin(0).setDepth(DEPTH.ground);
-    this.add.sprite(WATER_BOX.x, WATER_BOX.y, 'water', 0).setOrigin(0).setDepth(DEPTH.waterFx).play('water');
+    for (let r = 0, i = 0; r < GROUND_ROWS; r++) for (let c = 0; c < GROUND_COLS; c++, i++) {
+      this.add.image(c * GROUND_TILE.w, r * GROUND_TILE.h, `ground${i}`).setOrigin(0).setScale(HD).setDepth(DEPTH.ground);
+    }
+    this.buildWater();
     DOCKS.forEach((D, i) => this.add.image(D.x, D.y, `dock${i}`).setOrigin(ORIGIN[`dock${i}`].x, ORIGIN[`dock${i}`].y).setDepth(DEPTH.flat + 1));
 
     // lily pads bob gently, each on its own beat
@@ -185,13 +189,13 @@ export class WorldScene extends Phaser.Scene {
     // light: shafts through the trees, then a warm grade and soft vignette on the lens
     const shafts: [number, number][] = [[380, 660], [960, 700], [200, 340], [1140, 420], [700, 760], [450, 180], [1300, 560], [820, 200]];
     shafts.forEach(([x, y], i) => {
-      const r = this.add.image(x, y, 'rays').setBlendMode(Phaser.BlendModes.ADD).setDepth(DEPTH.light).setAlpha(0.22);
+      const r = this.add.image(x, y, 'rays').setScale(HD).setBlendMode(Phaser.BlendModes.ADD).setDepth(DEPTH.light).setAlpha(0.22);
       this.tweens.add({ targets: r, alpha: 0.5, duration: 2600 + i * 400, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
     });
     // screen-fixed overlays: placed so the zoomed camera maps them onto the whole view
     const ox = (VIEW.w * (ZOOM - 1)) / 2, oy = (VIEW.h * (ZOOM - 1)) / 2;
-    this.add.image(ox, oy, 'grade').setOrigin(0).setScrollFactor(0).setDepth(DEPTH.light + 1);
-    this.add.image(ox, oy, 'vignette').setOrigin(0).setScrollFactor(0).setDepth(DEPTH.light + 2);
+    this.add.image(ox, oy, 'grade').setScale(HD).setOrigin(0).setScrollFactor(0).setDepth(DEPTH.light + 1);
+    this.add.image(ox, oy, 'vignette').setScale(HD).setOrigin(0).setScrollFactor(0).setDepth(DEPTH.light + 2);
 
     const cam = this.cameras.main;
     cam.setZoom(ZOOM);
@@ -224,6 +228,40 @@ export class WorldScene extends Phaser.Scene {
         if (t === 1) cam.startFollow(this.player.sprite, true, 0.1, 0.1, 0, CAM_LEAD);
       });
     });
+  }
+
+  // ---------------------------------------------------------------- water
+  /**
+   * Moving water over the painted pond bed: sunlit crests and cool troughs drifting
+   * in different directions over open water, and foam lapping along the shore.
+   * Needs WebGL masks; the Canvas renderer keeps the still (but fully painted) pond.
+   */
+  private buildWater() {
+    if (this.renderer.type !== Phaser.WEBGL) return;
+    const B = WATER_BOX;
+    const mask = (key: string) => this.make.image({ x: B.x, y: B.y, key, add: false }).setOrigin(0).createBitmapMask();
+    const open = mask('waterOpen'), shore = mask('waterShore');
+    const layer = (key: string, alpha: number, blend = Phaser.BlendModes.NORMAL) =>
+      this.add.tileSprite(B.x, B.y, B.w, B.h, key).setOrigin(0).setTileScale(HD).setAlpha(alpha).setBlendMode(blend);
+    // open water: one mask for all four layers (each mask costs extra full-screen passes)
+    const swell = layer('swell', 1);
+    const dark = layer('rippleDark', 0.55);
+    const light = layer('rippleLight', 0.7, Phaser.BlendModes.ADD);
+    const light2 = layer('rippleLight', 0.35, Phaser.BlendModes.ADD).setTileScale(HD * 1.4);
+    this.add.container(0, 0, [swell, dark, light, light2]).setDepth(DEPTH.waterFx).setMask(open);
+    const foam = layer('foam', 0.8).setDepth(DEPTH.waterFx).setMask(shore);
+    this.tweens.add({ targets: foam, alpha: 0.4, duration: 1700, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    // tile offsets are in texture pixels; drift a few world pixels per second
+    const drift = (_t: number, dt: number) => {
+      const k = dt / 1000;
+      swell.tilePositionX += 4 * k; swell.tilePositionY -= 1.5 * k;
+      dark.tilePositionX -= 9 * k; dark.tilePositionY += 4 * k;
+      light.tilePositionX += 12 * k; light.tilePositionY += 3 * k;
+      light2.tilePositionX -= 7 * k; light2.tilePositionY -= 2 * k;
+      foam.tilePositionX += 5 * k; foam.tilePositionY = Math.sin(this.time.now / 900) * 6;
+    };
+    this.events.on('update', drift);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.events.off('update', drift));
   }
 
   // ---------------------------------------------------------------- fish bag

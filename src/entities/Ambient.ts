@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { DEPTH, WORLD } from '../config/game';
 import { Layout, POND_C } from '../world/layout';
+import { HD } from '../art/hd';
 import { GLITTER } from '../art/water';
 
 interface Fish { s: Phaser.GameObjects.Sprite; a: number; sp: number; x: number; y: number; turn: number; }
@@ -38,7 +39,7 @@ export class Ambient {
       this.dragonflies.push({ s, hx: p.x, hy: p.y, t: 0, k: 1, x: p.x, y: p.y, tx: p.x, ty: p.y, wait: R() * 2 });
     }
     for (let i = 0; i < 36; i++) {
-      const s = scene.add.sprite(0, 0, 'sparkle', 0).setDepth(DEPTH.waterFx + 1).setVisible(false);
+      const s = scene.add.sprite(0, 0, 'glint').setScale(0).setBlendMode(Phaser.BlendModes.ADD).setDepth(DEPTH.waterFx + 1).setVisible(false);
       this.sparkles.push(s);
       scene.time.delayedCall(R() * 1800, () => this.twinkle(s));
     }
@@ -59,10 +60,12 @@ export class Ambient {
       const x = Math.round(GLITTER.x + Math.cos(a) * GLITTER.rx * r), y = Math.round(GLITTER.y + Math.sin(a) * GLITTER.ry * r);
       if (this.L.pondAt(x, y) < -8) { s.setPosition(x, y); break; }
     }
-    s.setVisible(true).play('sparkle');
-    s.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
-      s.setVisible(false);
-      this.scene.time.delayedCall(200 + Math.random() * 1600, () => this.twinkle(s));
+    // a sun glint: swells, turns a little, fades
+    const peak = HD * (0.6 + Math.random() * 0.6);
+    s.setVisible(true).setScale(0).setAlpha(1).setAngle(Math.random() * 20 - 10);
+    this.scene.tweens.add({
+      targets: s, scale: peak, angle: s.angle + 25, duration: 260 + Math.random() * 200, yoyo: true, ease: 'Sine.inOut',
+      onComplete: () => { s.setVisible(false); this.scene.time.delayedCall(150 + Math.random() * 1300, () => this.twinkle(s)); },
     });
   }
 

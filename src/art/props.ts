@@ -569,11 +569,6 @@ export function leafSheet(): Sheet {
   return { canvas: c, fw: 4, fh: 3, ox: 2, oy: 1 };
 }
 
-export function shadowBlob(): HTMLCanvasElement {
-  const [c, ctx] = makeCanvas(16, 7);
-  ellipse(ctx, 8, 3, 7, 2.6, 'rgba(18,42,48,0.34)');
-  return c;
-}
 
 // ---------------------------------------------------------------- fishing
 export function catchSheet(kinds: { colors: [string, string, string] }[]): Sheet {
@@ -887,39 +882,5 @@ export function reticleCanvas(): HTMLCanvasElement {
 }
 
 // ---------------------------------------------------------------- light
-export function raysCanvas(): HTMLCanvasElement {
-  const W = 190, H = 170;
-  const [c, ctx] = makeCanvas(W, H);
-  const beams = [[14, 8], [44, 13], [78, 6], [100, 10]];
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    let a = 0;
-    for (const [bx, bw] of beams) {
-      const d = Math.abs(x - (bx + y * 0.42));
-      if (d < bw) a = Math.max(a, Math.pow(1 - d / bw, 1.5) * Math.pow(1 - y / H, 1.3) * Math.min(1, y / 24));
-    }
-    if (a > 0.02) { ctx.fillStyle = `rgba(255,226,140,${(a * 0.42).toFixed(3)})`; ctx.fillRect(x, y, 1, 1); }
-  }
-  return c;
-}
 
-export function gradeCanvas(w: number, h: number): HTMLCanvasElement {
-  // warm key light from the upper-left, cool falloff toward the lower-right
-  const [c, ctx] = makeCanvas(w, h);
-  for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) {
-    const t = (x / w) * 0.6 + (y / h) * 0.4;
-    const warm = Math.max(0, 0.75 - t), cool = Math.max(0, t - 0.55);
-    if (warm > 0.01) { ctx.fillStyle = `rgba(255,186,84,${(warm * 0.2).toFixed(3)})`; ctx.fillRect(x, y, 2, 2); }
-    if (cool > 0.01) { ctx.fillStyle = `rgba(40,30,90,${(cool * 0.34).toFixed(3)})`; ctx.fillRect(x, y, 2, 2); }
-  }
-  return c;
-}
 
-export function vignetteCanvas(w: number, h: number): HTMLCanvasElement {
-  const [c, ctx] = makeCanvas(w, h);
-  for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) {
-    const d = Math.hypot((x - w / 2) / (w / 2), (y - h / 2) / (h / 2));
-    const a = Math.max(0, d - 0.78) * 0.55;
-    if (a > 0.01) { ctx.fillStyle = `rgba(24,14,40,${Math.min(0.4, a).toFixed(3)})`; ctx.fillRect(x, y, 2, 2); }
-  }
-  return c;
-}

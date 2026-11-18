@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 import { VIEW } from '../config/game';
 import { Layout, DOCKS } from '../world/layout';
-import { paintGround } from './terrain';
-import { paintWaterSheet, WATER_BOX, WATER_FRAMES } from './water';
+import { addHD } from './hd';
+import { paintGroundHD } from './groundHD';
+import { waterMasks, rippleTile, swellTile, foamTile, glintCanvas, raysHD, gradeHD, vignetteHD, shadowHD } from './waterHD';
 import * as P from './props';
 import { FISH } from '../config/balance';
 import { keycap } from './ui';
@@ -28,10 +29,16 @@ const frames = (key: string, list: number[]) => list.map((f) => ({ key, frame: f
  * at boot, so the build ships no image files and stays tiny.
  */
 export function buildTextures(scene: Phaser.Scene, L: Layout) {
-  addCanvas(scene, 'ground', paintGround(L));
-
-  const water = scene.textures.addCanvas('water', paintWaterSheet(L))!;
-  for (let f = 0; f < WATER_FRAMES; f++) water.add(f, 0, (f % 4) * WATER_BOX.w, Math.floor(f / 4) * WATER_BOX.h, WATER_BOX.w, WATER_BOX.h);
+  // high-resolution ground, water and light (see hd.ts)
+  paintGroundHD(L).forEach((c, i) => addHD(scene, `ground${i}`, c));
+  const masks = waterMasks(L);
+  addHD(scene, 'waterOpen', masks.open);
+  addHD(scene, 'waterShore', masks.shore);
+  addHD(scene, 'rippleLight', rippleTile(200, 21, true));
+  addHD(scene, 'rippleDark', rippleTile(240, 22, false));
+  addHD(scene, 'foam', foamTile(120));
+  addHD(scene, 'swell', swellTile(320));
+  addHD(scene, 'glint', glintCanvas());
 
   for (let i = 0; i < 3; i++) {
     addSheet(scene, `palm${i}`, P.palmSheet(false, 11 + i));
@@ -95,10 +102,10 @@ export function buildTextures(scene: Phaser.Scene, L: Layout) {
   addCanvas(scene, 'arrow', P.arrowCanvas());
   addCanvas(scene, 'stone', P.stoneCanvas());
   addCanvas(scene, 'reticle', P.reticleCanvas());
-  addCanvas(scene, 'shadow', P.shadowBlob());
-  addCanvas(scene, 'rays', P.raysCanvas());
-  addCanvas(scene, 'grade', P.gradeCanvas(VIEW.w, VIEW.h));
-  addCanvas(scene, 'vignette', P.vignetteCanvas(VIEW.w, VIEW.h));
+  addHD(scene, 'shadow', shadowHD());
+  addHD(scene, 'rays', raysHD());
+  addHD(scene, 'grade', gradeHD(VIEW.w, VIEW.h));
+  addHD(scene, 'vignette', vignetteHD(VIEW.w, VIEW.h));
 
   for (const id of Object.keys(SPECS)) {
     addSheet(scene, id, { canvas: charSheet(SPECS[id]), fw: CHAR_FW, fh: CHAR_FH, ox: 13, oy: 31 });
@@ -111,7 +118,6 @@ export function buildTextures(scene: Phaser.Scene, L: Layout) {
   }
 
   const A = scene.anims;
-  A.create({ key: 'water', frames: frames('water', [0, 1, 2, 3, 4, 5, 6, 7]), frameRate: 6, repeat: -1 });
   for (let i = 0; i < 3; i++) {
     A.create({ key: `palm${i}-sway`, frames: frames(`palm${i}`, [0, 1, 2, 1]), frameRate: 2.4, repeat: -1 });
     A.create({ key: `palmKing${i}-sway`, frames: frames(`palmKing${i}`, [0, 1, 2, 1]), frameRate: 2.4, repeat: -1 });
