@@ -3,6 +3,7 @@ import { DEPTH } from '../config/game';
 import { THIEF } from '../config/balance';
 import { Player } from './Player';
 import { Economy } from '../systems/Economy';
+import { HD } from '../art/hd';
 import { audio } from '../systems/Audio';
 
 interface Drop { img: Phaser.GameObjects.Image; x: number; y: number; life: number; }
@@ -22,7 +23,7 @@ export class Loot {
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2, r = 10 + Math.random() * 12;
       const x = fromX + Math.cos(a) * r, y = fromY + Math.sin(a) * r * 0.6;
-      const img = this.scene.add.image(Math.round(fromX), Math.round(fromY - 14), 'catch', Math.floor(Math.random() * 3)).setDepth(DEPTH.sorted + y);
+      const img = this.scene.add.image(Math.round(fromX), Math.round(fromY - 14), 'catchHD', Math.floor(Math.random() * 3)).setScale(HD).setDepth(DEPTH.sorted + y);
       this.scene.tweens.add({ targets: img, x: Math.round(x), duration: 320 });
       this.scene.tweens.add({ targets: img, y: Math.round(y), duration: 320, ease: 'Bounce.out' });
       this.drops.push({ img, x, y, life: THIEF.dropExpire });

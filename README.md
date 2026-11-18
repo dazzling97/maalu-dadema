@@ -4,7 +4,7 @@
 
 To rebuild `play.html` after changing the code: `npm run build:play`.
 
-A 2D pixel-art fishing survival game set in a Sri Lankan village. Phaser 3 + TypeScript + Vite.
+A stylised 2.5D fishing survival game set in a Sri Lankan village. Phaser 3 + TypeScript + Vite.
 
 **The challenge:** three fixed stages played in order. Get 10 fish into the stationary bag in 3:00,
 then 24 in 3:30, then 34 in 4:00, with 3 hearts per stage, while crocodiles hunt you at the
@@ -77,16 +77,20 @@ music. Master, music and effects volume and mute are in Settings and saved in lo
 
 ## Rendering
 
-The art is 480 x 270 and the canvas is three times that, so interface text (Nunito, falling back to
-the system sans-serif) is drawn sharp while sprites stay pixel-perfect. On a slow machine add `?zoom=1`
+The world is laid out in a 480 x 270 view and the canvas is three times that. Every texture is drawn
+at that 3x density (`ART` in `src/art/hd.ts`) and shown at 1/3 scale, so at the default zoom each texture
+pixel lands on exactly one screen pixel: sharp edges, no upscaling blur. On a slow machine add `?zoom=1`
 to the address, or pass `zoom: 1` to `mount()`, for a low-resolution mode.
+
+Cost, measured in a desktop browser: about 2.5 s to paint all textures at boot (the ground is most of
+it), 85 MB of texture memory, no texture larger than 1440 px, and under 1 ms of CPU+GPU per frame.
 
 ## Code map
 
 ```
 src/config/      game.ts (resolution, palette), balance.ts (every tunable number)
 src/world/       layout.ts: pond shape, docks, paths, props, collision grid, zones, rock spots
-src/art/         procedural pixel art and the texture registry
+src/art/         procedural HD art (*HD.ts) and the texture registry
 src/systems/     Economy, Zones, Director, Events, Pathfind (A*), StateMachine, Input, Storage, Audio
 src/entities/    Player, Fishing, Crocodile, Thief, Stones, Loot, Ambient
 src/scenes/      Boot, World, Hud, Menu, Pause, Result, UiScene (shared kit), flow.ts
@@ -95,23 +99,26 @@ tests/           systems.test.ts (unit), playtest.cjs (bots)
 
 ## Art direction
 
-- 480 × 270 internal resolution, nearest-neighbour scaling. No rotation or blur.
-- Low sun in the upper-left: lit edges on that side, long shadows to the lower-right, warm lens grade.
-- 1 px dark outline on actors and props; terrain uses ordered dithering between tones.
+- Stylised 2.5D: smooth vector shapes with gradients, a soft ink outline and soft contact shadows,
+  drawn at 3x density. No pixel art, no blur filters, no heavy bloom.
+- Low sun in the upper-left: lit edges on that side, shadows to the lower-right, warm grade and a light vignette.
+- Water: a painted pond bed with see-through shallows, plus drifting ripple, swell and shore-foam layers (WebGL).
+- Interface: rounded plum glass panels, gold primary buttons, Nunito display headings with a rim and shadow.
 - Palette lives in `src/config/game.ts` (`PAL`).
 
 All art is original and generated in code at boot (`src/art/*`), so the build
 ships no image files. That keeps style, grid and lighting consistent.
 
-### Asset status (be honest list)
+### Where the art lives
 
-| Asset | Status |
+| File | Draws |
 | --- | --- |
-| Terrain, water, dock, shop, trees, props | First pass, in-engine. Good enough to ship Phase 1; shop and palms would benefit most from a hand-drawn pass. |
-| Podipasiya, Lekam Thuma, Sabapathi | **Temporary.** Idle, walk and a single fishing pose. Proper cast / reel, throwing, hurt, celebrate, lose, sneak, grab, stunned, flee frames are not drawn yet. |
-| Crocodile | First pass: swim, walk, jaws-open, lunge, stunned frames. Reads small; wants a larger hand-drawn version. |
-| Pixel font | 3 × 5 Latin caps only. Sinhala logotype needs a drawn asset (Phase 5). |
-| Audio | None yet (Phase 5). |
+| `hd.ts` | density constants, `addHD` / `addHDSheet` registration, colour helpers |
+| `groundHD.ts`, `waterHD.ts` | ground tiles (pond bed, grass, paths, sand, light), water layers and masks, grade and vignette |
+| `charactersHD.ts` | Podipasiya, Lekam Thuma and Sabapathi from one parametric renderer: idle, blink, walk, fish, throw, hurt; menu portraits |
+| `fxHD.ts` | crocodiles (swim, walk, open, lunge, stunned), wakes, splashes, sparkles, bobber, nets, fish, rocks |
+| `sceneryHD.ts` | palms, trees, bushes, reeds, lilies, docks, canoe, shop, fences, props, birds and insects |
+| `uiHD.ts` | panels, buttons, keycaps, HUD icons, menu backdrops, logo |
 
 ## Architecture
 
@@ -125,8 +132,8 @@ src/
   world/
     layout.ts            pond shape (distance field), paths, prop placement,
                          collision grid, zones: the single source of truth
-  art/                   procedural pixel art (px toolkit, font, terrain,
-                         water, props, characters, ui) + texture registry
+  art/                   procedural HD art (ground, water, characters,
+                         effects, scenery, ui) + texture registry
   systems/
     StateMachine.ts      generic FSM used by player and NPCs
     Input.ts             key bindings -> intent

@@ -5,6 +5,7 @@ import { GearState, sellFish, buyGear, equipGear, shopHint } from '../systems/Ge
 import { Economy } from '../systems/Economy';
 import { audio } from '../systems/Audio';
 import { UiScene } from './UiScene';
+import { HD } from '../art/hd';
 
 export interface ShopApi { eco: Economy; gear: GearState; }
 
@@ -54,7 +55,7 @@ export class ShopScene extends UiScene {
     stat(cx - 88, 'Fish in Bag', `${eco.stored} / ${RUN.target}`, '#f6e7c1');
     stat(cx, 'Carrying', `${eco.carried}`, eco.carried ? '#ffe9a8' : '#c9d4b8');
     stat(cx + 88, 'Fish Coins', `${gear.coins}`, '#ffe36a');
-    this.root.add(this.add.image(cx + 88 - 6 - `${gear.coins}`.length * 3, y + 39, 'coin').setOrigin(1, 0));
+    this.root.add(this.add.image(cx + 88 - 6 - `${gear.coins}`.length * 3, y + 39, 'coin').setOrigin(1, 0).setScale(HD));
 
     // what to do next
     const tone = hint.kind === 'sell' || hint.kind === 'buy' ? '#9ff08a' : hint.kind === 'deposit' ? '#ffe9a8' : '#ffc48a';
@@ -74,7 +75,7 @@ export class ShopScene extends UiScene {
         this.cameras.main.shake(90, 0.0025);
         this.say(r === 'locked' ? `The ${d.name} unlocks in Stage ${d.stage + 1}.` : this.poorReason(d.cost), false, i);
       }, { h: 28, disabled: locked || poor });
-      const icon = this.add.image(x + 26, ry + 14, 'gear', d.frame).setScale(1).setAlpha(locked ? 0.4 : 1);
+      const icon = this.add.image(x + 26, ry + 14, 'gear', d.frame).setScale(HD).setAlpha(locked ? 0.4 : 1);
       this.root.add(icon);
       this.sans(x + 42, ry + 3, d.name, 8.5, locked ? '#8f879c' : '#f6e7c1', true);
       this.sans(x + 42, ry + 15, d.desc, 6.5, locked ? '#8f879c' : '#c9d4b8');

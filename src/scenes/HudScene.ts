@@ -1,10 +1,9 @@
 import Phaser from 'phaser';
 import { VIEW } from '../config/game';
 import { RUN, CUR, STAGES, GEAR, GearId, SHOP_OPENS_STAGE } from '../config/balance';
-import { textCanvas, textWidth } from '../art/font';
-import { PAL } from '../config/game';
+import { HD, hdScale } from '../art/hd';
 import { fmtTime, load } from '../systems/Storage';
-import { fitUi, uiText, darkPanel } from './UiScene';
+import { fitUi, uiText, darkPanel, displayText } from './UiScene';
 import type { CoachCard } from '../entities/Tutor';
 
 /** mm:ss with a leading zero, so the strip never changes width. */
@@ -47,12 +46,14 @@ export class HudScene extends Phaser.Scene {
 
   private tex(c: HTMLCanvasElement): string {
     const key = `hud-${this.n++}`;
-    this.textures.addCanvas(key, c);
+    this.textures.addCanvas(key, c)!.setFilter(Phaser.Textures.FilterMode.LINEAR);
     return key;
   }
-  private box(x: number, y: number, w: number, h: number, edge?: string) {
-    return this.add.image(x, y, this.tex(darkPanel(w, h, edge))).setOrigin(0);
+  /** A dark HUD panel (drawn at ART density, shown at world size). */
+  private panelImg(x: number, y: number, w: number, h: number, edge?: string) {
+    return this.add.image(x, y, this.tex(darkPanel(w, h, edge))).setOrigin(0).setScale(HD);
   }
+  private box(x: number, y: number, w: number, h: number, edge?: string) { return this.panelImg(x, y, w, h, edge); }
 
   create() {
     fitUi(this);
@@ -67,10 +68,10 @@ export class HudScene extends Phaser.Scene {
     const sep = (x: number) => this.add.rectangle(x, BY + 4, 1, BH - 8, 0xf6e7c1, 0.28).setOrigin(0);
     uiText(this, x0 + 8, TY, `STAGE ${CUR.index + 1}/${STAGES.length}`, 7.5, '#e0c38a', true);
     sep(x0 + 57);
-    this.add.image(x0 + 64, MID, 'catch', 0).setOrigin(0, 0.5).setScale(0.8);
+    this.add.image(x0 + 64, MID, 'catch', 0).setOrigin(0, 0.5).setScale(0.8 * HD);
     this.stored = uiText(this, x0 + 80, TY - 0.5, `0/${RUN.target}`, 8.5, '#9ff08a', true);
     sep(x0 + 118);
-    this.add.image(x0 + 125, MID, 'clock').setOrigin(0, 0.5);
+    this.add.image(x0 + 125, MID, 'clock').setOrigin(0, 0.5).setScale(HD);
     this.timer = uiText(this, x0 + 136, TY - 0.5, clock(RUN.duration), 8.5, '#fff6d8', true);
     // progress toward the target runs along the bottom edge of the strip
     this.add.rectangle(x0 + 3, BY + BH - 2, cw - 6, 1, 0x3a2f44).setOrigin(0);
@@ -78,30 +79,30 @@ export class HudScene extends Phaser.Scene {
 
     // ---- left: hearts and rocks in one small group
     this.box(6, BY, 84, BH);
-    for (let i = 0; i < RUN.hearts; i++) this.hearts.push(this.add.image(11 + i * 12, MID, 'heart', 0).setOrigin(0, 0.5));
+    for (let i = 0; i < RUN.hearts; i++) this.hearts.push(this.add.image(11 + i * 12, MID, 'heart', 0).setOrigin(0, 0.5).setScale(HD));
     sep(51);
-    this.add.image(56, MID, 'stones').setOrigin(0, 0.5).setScale(0.8);
+    this.add.image(56, MID, 'stones').setOrigin(0, 0.5).setScale(0.8 * HD);
     this.rocks = uiText(this, 70, TY, `${RUN.startRocks}/${RUN.maxRocks}`, 7.5, '#f6e7c1', true);
 
     // ---- right: fish in hand, and from Stage 2 the gear in hand and Fish Coins
     const shop = CUR.index >= SHOP_OPENS_STAGE;
     const rw = shop ? 118 : 46, rx = VIEW.w - 6 - rw;
     this.box(rx, BY, rw, BH);
-    this.add.image(rx + 6, MID, 'bag').setOrigin(0, 0.5).setScale(0.55);
+    this.add.image(rx + 6, MID, 'bag').setOrigin(0, 0.5).setScale(0.55 * HD);
     this.carriedText = uiText(this, rx + 22, TY, `0/${RUN.carryMax}`, 7.5, '#f6e7c1', true);
     if (shop) sep(rx + 46);
-    this.gearIcon = this.add.image(rx + 57, MID, 'gear', 0).setScale(0.75).setVisible(shop);
+    this.gearIcon = this.add.image(rx + 57, MID, 'gear', 0).setScale(0.75 * HD).setVisible(shop);
     this.gearText = uiText(this, rx + 65, TY + 0.5, 'Rod', 6.5, '#f6e7c1', true).setVisible(shop);
-    this.swapKey = this.add.image(rx + 57, MID + 3, 'key-q').setOrigin(0, 0).setScale(0.5).setVisible(false);
-    this.add.image(rx + 94, MID, 'coin').setOrigin(0, 0.5).setVisible(shop);
+    this.swapKey = this.add.image(rx + 57, MID + 3, 'key-q').setOrigin(0, 0).setScale(0.5 * HD).setVisible(false);
+    this.add.image(rx + 94, MID, 'coin').setOrigin(0, 0.5).setScale(HD).setVisible(shop);
     this.coinText = uiText(this, rx + 104, TY, '0', 7.5, '#ffe36a', true).setVisible(shop);
 
     this.hudBoxes = { rocks: { x: 52, y: BY + 1, w: 37, h: BH - 2 }, fish: { x: x0 + 58, y: BY + 1, w: 60, h: BH - 2 }, carry: { x: rx + 1, y: BY + 1, w: 44, h: BH - 2 } };
     this.coach = undefined; this.mark = undefined;
-    this.point = this.add.image(0, 0, 'arrow').setDepth(90).setVisible(false);
+    this.point = this.add.image(0, 0, 'arrow').setScale(HD).setDepth(90).setVisible(false);
 
-    this.arrow = this.add.image(0, 0, 'arrow').setDepth(90).setVisible(false);
-    this.reticle = this.add.image(0, 0, 'reticle').setDepth(100);
+    this.arrow = this.add.image(0, 0, 'arrow').setScale(HD).setDepth(90).setVisible(false);
+    this.reticle = this.add.image(0, 0, 'reticle').setScale(HD).setDepth(100);
 
     const ev = this.game.events;
     const on = (name: string, fn: (...a: never[]) => void) => { ev.on(name, fn, this); this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => ev.off(name, fn, this)); };
@@ -131,10 +132,10 @@ export class HudScene extends Phaser.Scene {
   private onIntro(index: number) {
     const st = STAGES[index], cx = VIEW.w / 2, w = 250, h = 74;
     const c = this.add.container(0, 0).setDepth(200);
-    c.add(this.add.image(cx - w / 2, 92, this.tex(darkPanel(w, h, 'rgba(246,210,74,0.9)'))).setOrigin(0));
+    c.add(this.panelImg(cx - w / 2, 92, w, h, 'rgba(246,210,74,0.9)'));
     c.add(uiText(this, cx, 98, `STAGE ${index + 1} OF ${STAGES.length}  ·  ${st.label.toUpperCase()}`, 7.5, '#e0c38a', true).setOrigin(0.5, 0));
     const title = st.name.toUpperCase();
-    c.add(this.add.image(Math.round(cx - textWidth(title, 2) / 2), 113, this.tex(textCanvas(title, '#ffe9a8', PAL.ink, 2))).setOrigin(0));
+    c.add(displayText(this, cx, 111, title, '#ffe9a8', 2, true));
     c.add(uiText(this, cx, 132, `Get ${st.target} fish into the bag in ${fmtTime(st.duration)}`, 9, '#fff6d8', true).setOrigin(0.5, 0));
     c.add(uiText(this, cx, 147, index === 0 ? 'Crocodiles are slow and Sabapathi is lazy. For now.' : index === 1 ? 'Faster crocodiles. Sabapathi raids more often.' : 'Everything is faster. Guard that bag.', 7, '#c9d4b8').setOrigin(0.5, 0));
     c.setAlpha(0);
@@ -190,8 +191,8 @@ export class HudScene extends Phaser.Scene {
     skip.setPosition(w - 6, h - 4);
     const y = VIEW.h - h - 8;
     const c = this.add.container(Math.round(VIEW.w / 2 - w / 2), y + 5).setDepth(80).setAlpha(0);
-    c.add(this.add.image(0, 0, this.tex(darkPanel(w, h, 'rgba(246,210,74,0.85)'))).setOrigin(0));
-    if (card.icon) c.add(this.add.image(13, h / 2, card.icon, card.frame ?? 0).setScale(card.icon === 'bag' ? 0.6 : 1));
+    c.add(this.panelImg(0, 0, w, h, 'rgba(246,210,74,0.85)'));
+    if (card.icon) c.add(this.add.image(13, h / 2, card.icon, card.frame ?? 0).setScale((card.icon === 'bag' ? 0.6 : 1) * hdScale(card.icon)));
     c.add(t); if (s2) c.add(s2); c.add(skip);
     this.tweens.add({ targets: c, alpha: 1, y, duration: 240, ease: 'Cubic.out' });
     this.coach = c;
@@ -228,13 +229,13 @@ export class HudScene extends Phaser.Scene {
     const col = kind === 'warn' ? '#ffb4a6' : kind === 'good' ? '#9ff08a' : kind === 'tip' ? '#ffe9a8' : '#f6e7c1';
     const t = uiText(this, 0, 3, text, kind === 'tip' ? 8 : 7.5, col, kind !== 'info').setOrigin(0, 0);
     const s2 = sub ? uiText(this, 0, 14, sub, 7, '#f6e7c1').setOrigin(0, 0) : null;
-    const icon = kind === 'warn' ? this.add.image(8, 8, 'warn') : iconKey ? this.add.image(11, sub ? 13 : 8, iconKey, iconFrame).setScale(sub ? 1 : 0.7) : null;
+    const icon = kind === 'warn' ? this.add.image(8, 8, 'warn').setScale(HD) : iconKey ? this.add.image(11, sub ? 13 : 8, iconKey, iconFrame).setScale((sub ? 1 : 0.7) * hdScale(iconKey)) : null;
     const pad = icon ? (iconKey ? (sub ? 24 : 18) : 17) : 8, h = sub ? 27 : 16;
     const w = Math.ceil(Math.max(t.width, s2 ? s2.width : 0)) + pad + 8;
     t.setX(pad); s2?.setX(pad);
     const c = this.add.container(Math.round(VIEW.w / 2 - w / 2), 19);
     const edge = kind === 'warn' ? 'rgba(255,120,100,0.9)' : kind === 'good' ? 'rgba(159,240,138,0.7)' : kind === 'tip' ? 'rgba(246,210,74,0.85)' : 'rgba(246,231,193,0.3)';
-    c.add(this.add.image(0, 0, this.tex(darkPanel(w, h, edge))).setOrigin(0));
+    c.add(this.panelImg(0, 0, w, h, edge));
     if (icon) { c.add(icon); if (kind === 'warn') this.tweens.add({ targets: icon, alpha: 0.35, duration: 220, yoyo: true, repeat: 3 }); }
     c.add(t); if (s2) c.add(s2);
     c.setAlpha(0);

@@ -3,6 +3,7 @@ import { DEPTH } from '../config/game';
 import { STONE, RUN } from '../config/balance';
 import { Layout } from '../world/layout';
 import { Player } from './Player';
+import { HD } from '../art/hd';
 import { audio } from '../systems/Audio';
 
 interface Shot { img: Phaser.GameObjects.Image; shadow: Phaser.GameObjects.Image; x: number; y: number; vx: number; vy: number; t: number; life: number; }
@@ -22,7 +23,7 @@ export class Stones {
     private say: (x: number, y: number, text: string, color: string) => void,
   ) {
     for (const p of spots) {
-      const img = scene.add.image(p.x, p.y, 'stones').setOrigin(0.5, 0.9).setDepth(DEPTH.sorted + p.y);
+      const img = scene.add.image(p.x, p.y, 'stonesHD').setScale(HD).setOrigin(0.5, 0.9).setDepth(DEPTH.sorted + p.y);
       this.rocks.push({ img, x: p.x, y: p.y, back: 0 });
     }
     this.emit();
@@ -56,7 +57,7 @@ export class Stones {
       // the rock hops up into the pocket
       const img = r.img;
       this.scene.tweens.add({ targets: img, y: r.y - 12, alpha: 0, duration: 200, ease: 'Quad.out', onComplete: () => img.setVisible(false).setY(r.y) });
-      const fx = this.scene.add.sprite(r.x, r.y - 6, 'sparkle', 0).setDepth(DEPTH.air + 4).play('sparkle');
+      const fx = this.scene.add.sprite(r.x, r.y - 6, 'sparkle', 0).setScale(HD).setDepth(DEPTH.air + 4).play('sparkle');
       fx.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => fx.destroy());
       this.say(r.x, r.y - 14, '+1 ROCK', '#f6e7c1');
       audio.play('pickup');
@@ -82,8 +83,8 @@ export class Stones {
     const sx = p.x, sy = p.y - 4;
     const dx = tx - sx, dy = ty - sy, len = Math.hypot(dx, dy) || 1;
     const dist = Math.min(STONE.range, Math.max(24, len));
-    const img = this.scene.add.image(sx, sy, 'stone');
-    const shadow = this.scene.add.image(sx, sy, 'shadow').setScale(0.4).setDepth(DEPTH.flat + 2);
+    const img = this.scene.add.image(sx, sy, 'stone').setScale(HD);
+    const shadow = this.scene.add.image(sx, sy, 'shadow').setScale(0.4 * HD).setDepth(DEPTH.flat + 2);
     this.shots.push({ img, shadow, x: sx, y: sy, vx: (dx / len) * STONE.speed, vy: (dy / len) * STONE.speed, t: 0, life: dist / STONE.speed });
     return true;
   }
@@ -91,10 +92,10 @@ export class Stones {
   private impact(x: number, y: number, hit: boolean) {
     const water = !hit && this.L.pondAt(x, y) < 0 && !this.L.onDock(x, y, 0);
     const key = water ? 'ring' : 'puff';
-    const fx = this.scene.add.sprite(Math.round(x), Math.round(y), key, 0).setDepth(water ? DEPTH.waterFx + 1 : DEPTH.sorted + y + 5).play(key);
+    const fx = this.scene.add.sprite(Math.round(x), Math.round(y), key, 0).setScale(HD).setDepth(water ? DEPTH.waterFx + 1 : DEPTH.sorted + y + 5).play(key);
     fx.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => fx.destroy());
     if (hit) for (let i = 0; i < 4; i++) { // chips fly off
-      const chip = this.scene.add.image(x, y - 6, 'drop').setDepth(DEPTH.air + 2);
+      const chip = this.scene.add.image(x, y - 6, 'drop').setScale(HD).setDepth(DEPTH.air + 2);
       const a = Math.random() * Math.PI * 2;
       this.scene.tweens.add({ targets: chip, x: x + Math.cos(a) * 12, y: y - 6 + Math.sin(a) * 9, alpha: 0, duration: 280, onComplete: () => chip.destroy() });
     }

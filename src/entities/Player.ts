@@ -5,6 +5,7 @@ import { Layout } from '../world/layout';
 import { ORIGIN } from '../art/textures';
 import { Dir } from '../art/characters';
 import { StateMachine } from '../systems/StateMachine';
+import { HD } from '../art/hd';
 import { Input } from '../systems/Input';
 
 type PState = 'idle' | 'walk' | 'dash' | 'fishing' | 'hurt' | 'down';
@@ -27,9 +28,9 @@ export class Player {
 
   constructor(private scene: Phaser.Scene, private L: Layout, private input: Input, readonly def: CharacterDef, x: number, y: number) {
     this.x = x; this.y = y;
-    this.shadow = scene.add.image(x, y, 'shadow').setDepth(DEPTH.flat + 2);
-    this.sprite = scene.add.sprite(x, y, def.id, 0).setOrigin(ORIGIN[def.id].x, ORIGIN[def.id].y);
-    for (let i = 0; i < 8; i++) this.puffs.push(scene.add.sprite(0, 0, 'puff', 0).setVisible(false).setOrigin(0.5, 0.7));
+    this.shadow = scene.add.image(x, y, 'shadow').setScale(HD).setDepth(DEPTH.flat + 2);
+    this.sprite = scene.add.sprite(x, y, def.id, 0).setOrigin(ORIGIN[def.id].x, ORIGIN[def.id].y).setScale(HD);
+    for (let i = 0; i < 8; i++) this.puffs.push(scene.add.sprite(0, 0, 'puff', 0).setScale(HD).setVisible(false).setOrigin(0.5, 0.7));
 
     this.fsm = new StateMachine<Player, PState>(this, {
       idle: {
@@ -130,7 +131,7 @@ export class Player {
   }
   private ghost() {
     const g = this.scene.add.image(this.sprite.x, this.sprite.y, this.def.id, this.sprite.frame.name)
-      .setOrigin(this.sprite.originX, this.sprite.originY).setDepth(this.sprite.depth - 1).setAlpha(0.5).setTintFill(0xfff0b8);
+      .setOrigin(this.sprite.originX, this.sprite.originY).setScale(HD).setDepth(this.sprite.depth - 1).setAlpha(0.5).setTintFill(0xfff0b8);
     this.scene.tweens.add({ targets: g, alpha: 0, duration: 180, onComplete: () => g.destroy() });
   }
 
@@ -146,7 +147,9 @@ export class Player {
     if (this.L.canStand(this.x, ny)) this.y = ny; else this.vy = 0;
 
     const moving = this.fsm.is('walk') || this.fsm.is('dash');
-    this.sprite.play(`${this.def.id}-${this.fsm.is('fishing') || this.throwT > 0 ? 'fish' : moving ? 'walk' : 'idle'}-${this.facing}`, true);
+    const anim = this.fsm.is('hurt') || this.fsm.is('down') ? 'hurt' : this.fsm.is('fishing') ? 'fish' : this.throwT > 0 ? 'throw' : moving ? 'walk' : 'idle';
+    this.sprite.play(`${this.def.id}-${anim}-${this.facing}`, true);
+    this.sprite.anims.timeScale = this.fsm.is('dash') ? 1.8 : 1; // a sprint, not a stroll
     this.sprite.setPosition(Math.round(this.x), Math.round(this.y));
     this.sprite.setDepth(DEPTH.sorted + this.y);
     this.shadow.setPosition(this.sprite.x, this.sprite.y);

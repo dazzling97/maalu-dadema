@@ -1,51 +1,18 @@
 import Phaser from 'phaser';
-import { VIEW, PAL } from '../config/game';
+import { VIEW } from '../config/game';
 import { CHARACTERS, RUN, STAGES } from '../config/balance';
-import { makeCanvas, rect, outline } from '../art/px';
-import { drawText, textWidth } from '../art/font';
-import { keycap } from '../art/ui';
+import { logoHD, keycapHD, stageHD } from '../art/uiHD';
+import { charPortraitHD, HCHAR } from '../art/charactersHD';
+import { SPECS } from '../art/characters';
 import { load, save, fmtTime } from '../systems/Storage';
 import { audio } from '../systems/Audio';
 import { UiScene } from './UiScene';
+import { HD, hdScale } from '../art/hd';
 import { startRun } from './flow';
 
 type Screen = 'main' | 'chars' | 'how' | 'settings' | 'scores';
 const CX = VIEW.w / 2;
 const VERSION = 'v1.0';
-
-/** Big carved logo: chunky pixel letters with a gold-to-orange face, dark rim and drop shadow. */
-function logoCanvas(sinhala: boolean): HTMLCanvasElement {
-  const S = 6, title = 'MAALU DADEMA';
-  const tw = textWidth(title, S);
-  const [c, ctx] = makeCanvas(tw + 24, 5 * S + (sinhala ? 32 : 10));
-  const [t, tc] = makeCanvas(tw + 4, 5 * S + 4);
-  drawText(tc, title, 2, 2, '#f6d24a', S);
-  const img = tc.getImageData(0, 0, t.width, t.height);
-  for (let y = 0; y < t.height; y++) for (let x = 0; x < t.width; x++) {
-    const i = (y * t.width + x) * 4;
-    if (img.data[i + 3] === 0) continue;
-    const band = Math.floor(((y - 2) / (5 * S)) * 4);
-    const col = [[255, 243, 160], [246, 210, 74], [242, 166, 58], [224, 122, 46]][Math.min(3, Math.max(0, band))];
-    img.data[i] = col[0]; img.data[i + 1] = col[1]; img.data[i + 2] = col[2];
-  }
-  tc.putImageData(img, 0, 0);
-  outline(t, PAL.outline); outline(t, PAL.outline);
-  ctx.globalAlpha = 0.5; ctx.drawImage(t, 12, 5); ctx.globalAlpha = 1;
-  ctx.drawImage(t, 10, 1);
-  if (sinhala) {
-    // Sinhala title set in a real font, then snapped to hard pixels
-    const [s, sc] = makeCanvas(c.width, 20);
-    sc.font = '700 15px "Noto Sans Sinhala", sans-serif';
-    sc.textAlign = 'center'; sc.textBaseline = 'middle'; sc.fillStyle = '#ffe9a8';
-    sc.fillText('මාළු දඩයම', c.width / 2, 10);
-    const d = sc.getImageData(0, 0, s.width, s.height);
-    for (let i = 0; i < d.data.length; i += 4) d.data[i + 3] = d.data[i + 3] > 105 ? 255 : 0;
-    sc.putImageData(d, 0, 0);
-    outline(s, PAL.outline);
-    ctx.drawImage(s, 0, 5 * S + 8);
-  }
-  return c;
-}
 
 export class MenuScene extends UiScene {
   private screen: Screen = 'main';
@@ -116,9 +83,10 @@ export class MenuScene extends UiScene {
   private buildMain() {
     this.gradient();
     const sinhala = this.registry.get('sinhala') === true;
-    const logo = this.add.image(CX, 30, this.tx(logoCanvas(sinhala))).setOrigin(0.5, 0);
+    const L = logoHD(sinhala);
+    const logo = this.add.image(CX, 26, this.tx(L.canvas)).setOrigin(0.5, 0).setScale(HD);
     this.root.add(logo);
-    const subY = 30 + logo.height + 2;
+    const subY = 26 + L.h - (sinhala ? 2 : 4);
     const sub = this.sans(CX, subY, 'The Great Fish Heist', 10, '#f6e7c1', false, true);
     sub.setLetterSpacing(1.5);
     const y0 = subY + 34;
@@ -145,11 +113,11 @@ export class MenuScene extends UiScene {
       const x = CX - 126 + i * 132, on = i === this.charIdx;
       const card = this.panel(x, 34, 120, 146, on);
       card.setInteractive().on('pointerdown', () => { this.charIdx = i; audio.play('uiMove'); this.show('chars'); });
-      const [g, gc] = makeCanvas(4, 4); rect(gc, 0, 0, 4, 4, on ? '#62a645' : '#3f6a3a');
-      this.root.add(this.add.image(x + 8, 42, this.tx(g)).setOrigin(0).setScale(26, 24));
-      const sp = this.add.sprite(x + 60, 134, ch.id, 0).setOrigin(0.5, 1).setScale(3);
-      sp.play(`${ch.id}-${on ? 'walk' : 'idle'}-down`);
-      if (!on) sp.setAlpha(0.7);
+      this.hd(x + 8, 42, stageHD(104, 96, 'grass', { dim: !on }));
+      // a sharp portrait (the walk sheet scaled up 3x would be soft); the chosen one bobs
+      const sp = this.add.image(x + 60, 130, this.tx(charPortraitHD(SPECS[ch.id]))).setOrigin(HCHAR.ox / HCHAR.fw, HCHAR.oy / HCHAR.fh).setScale(HD); // feet on the lawn
+      if (on) this.tweens.add({ targets: sp, y: sp.y - 2, duration: 520, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+      else sp.setAlpha(0.7);
       this.root.add(sp);
       this.sans(x + 60, 143, ch.name, 9, on ? '#ffe9a8' : '#f6e7c1', true, true);
       this.sans(x + 60, 156, ch.blurb, 7, '#f6e7c1', false, true);
@@ -185,13 +153,10 @@ export class MenuScene extends UiScene {
     const c = cards[this.card], x = CX - 150, y = 28, w = 300, h = 170;
     this.heading('HOW TO PLAY');
     this.panel(x, y, w, h, true);
-    const [g, gc] = makeCanvas(4, 4); rect(gc, 0, 0, 4, 4, this.card === 0 ? '#2b8a9e' : '#62a645');
-    this.root.add(this.add.image(x + 12, y + 12, this.tx(g)).setOrigin(0).setScale(69, 20));
-    const art = (key: string, ax: number, ay: number, frame: number | string = 0, scale = 2) => { const s = this.add.sprite(x + ax, y + ay, key, frame).setScale(scale); this.root.add(s); return s; };
+    this.hd(x + 12, y + 12, this.card === 0 ? stageHD(276, 80, 'shore', { split: 104 }) : stageHD(276, 80, 'grass'));
+    const art = (key: string, ax: number, ay: number, frame: number | string = 0, scale = 2) => { const s = this.add.sprite(x + ax, y + ay, key, frame).setScale(scale * hdScale(key)); this.root.add(s); return s; };
     const hero = load().charId;
     if (this.card === 0) {
-      const [l, lc] = makeCanvas(4, 4); rect(lc, 0, 0, 4, 4, '#62a645');
-      this.root.add(this.add.image(x + 12, y + 12, this.tx(l)).setOrigin(0).setScale(26, 20));
       art(hero, 86, 54).play(`${hero}-fish-right`);
       art('bobber', 196, 62, 1, 3); art('ring', 196, 66, 1, 3); art('bang', 196, 34, 0, 2);
       art('fish', 236, 70, 0, 3).setAlpha(0.6);
@@ -212,8 +177,8 @@ export class MenuScene extends UiScene {
     this.sans(x + 14, y + 109, c.head, 12, '#ffe9a8', true);
     c.lines.forEach((t, i) => this.sans(x + 14, y + 127 + i * 12, t, 8.5, '#f6e7c1'));
     let kx = x + w - 14;
-    for (const k of [...c.keys].reverse()) { const img = this.add.image(kx, y + 104, this.tx(keycap(k))).setOrigin(1, 0); this.root.add(img); kx -= img.width + 3; }
-    for (let i = 0; i < 4; i++) { const [d, dc] = makeCanvas(4, 4); rect(dc, 0, 0, 4, 4, i === this.card ? '#f6d24a' : '#4a3f58'); this.root.add(this.add.image(CX - 14 + i * 8, y + h - 9, this.tx(d)).setOrigin(0)); }
+    for (const k of [...c.keys].reverse()) { const img = this.add.image(kx, y + 104, this.tx(keycapHD(k))).setOrigin(1, 0).setScale(HD); this.root.add(img); kx -= img.displayWidth + 3; }
+    for (let i = 0; i < 4; i++) this.root.add(this.add.circle(CX - 12 + i * 8, y + h - 7, i === this.card ? 2.2 : 1.7, i === this.card ? 0xf6d24a : 0x4a3f58).setStrokeStyle(0.5, 0x120c1a));
     const by = 206;
     if (this.card > 0) this.button(CX - 110, by + 2, 70, 'Back', () => { this.card--; this.show('how'); });
     this.button(CX, by + 3, 56, 'Skip', () => this.leaveHow(this.fromPlay), { style: 'link', h: 14 });

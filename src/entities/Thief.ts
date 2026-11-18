@@ -10,6 +10,7 @@ import { theftUrge, grabSize, bandAt } from '../systems/Director';
 import { Economy } from '../systems/Economy';
 import { Player } from './Player';
 import { Loot } from './Loot';
+import { HD } from '../art/hd';
 import { audio } from '../systems/Audio';
 
 export type TState = 'waiting' | 'approaching' | 'sneaking' | 'stealing' | 'escaping' | 'stunned' | 'retreating' | 'inside';
@@ -55,10 +56,10 @@ export class Thief {
   ) {
     this.home = { x: SHOP.x - 6, y: SHOP.y + 12 };
     this.x = this.home.x; this.y = this.home.y;
-    this.shadow = scene.add.image(this.x, this.y, 'shadow').setDepth(DEPTH.flat + 2);
-    this.sprite = scene.add.sprite(this.x, this.y, 'sabapathi', 0).setOrigin(ORIGIN.sabapathi.x, ORIGIN.sabapathi.y);
-    this.sack = scene.add.image(this.x, this.y, 'loot').setOrigin(0.5, 1).setVisible(false);
-    for (let k = 0; k < 2; k++) this.stars.push(scene.add.sprite(0, 0, 'sparkle', 1).setDepth(DEPTH.air + 4).setVisible(false));
+    this.shadow = scene.add.image(this.x, this.y, 'shadow').setScale(HD).setDepth(DEPTH.flat + 2);
+    this.sprite = scene.add.sprite(this.x, this.y, 'sabapathi', 0).setOrigin(ORIGIN.sabapathi.x, ORIGIN.sabapathi.y).setScale(HD);
+    this.sack = scene.add.image(this.x, this.y, 'loot').setScale(HD).setOrigin(0.5, 1).setVisible(false);
+    for (let k = 0; k < 2; k++) this.stars.push(scene.add.sprite(0, 0, 'sparkle', 1).setScale(HD).setDepth(DEPTH.air + 4).setVisible(false));
 
     this.fsm = new StateMachine<Thief, TState>(this, {
       // at the shop, glancing about, weighing up the bag
@@ -193,7 +194,7 @@ export class Thief {
     if (this.puffT > 0) return;
     this.puffT = 0.16;
     audio.play('step');
-    const p = this.scene.add.sprite(Math.round(this.x), Math.round(this.y - 1), 'puff', 0).setOrigin(0.5, 0.7).setDepth(DEPTH.sorted + this.y - 1).play('puff');
+    const p = this.scene.add.sprite(Math.round(this.x), Math.round(this.y - 1), 'puff', 0).setScale(HD).setOrigin(0.5, 0.7).setDepth(DEPTH.sorted + this.y - 1).play('puff');
     p.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => p.destroy());
   }
 
@@ -219,7 +220,7 @@ export class Thief {
 
     const st = this.fsm.current, s = this.sprite;
     const sneaking = st === 'sneaking';
-    const anim = st === 'stealing' ? 'fish' : this.moving ? 'walk' : 'idle';
+    const anim = st === 'stunned' ? 'hurt' : st === 'stealing' ? 'fish' : this.moving ? 'walk' : 'idle';
     s.play(`sabapathi-${anim}-${this.facing}`, true);
     s.anims.timeScale = sneaking ? 0.55 : st === 'escaping' ? 1.5 : st === 'retreating' ? 2 : 1;
     const tiptoe = sneaking && this.moving ? -Math.abs(Math.round(Math.sin(time / 110))) : 0;

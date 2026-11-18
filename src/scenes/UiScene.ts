@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
 import { PAL, VIEW, ZOOM, UI_FONT } from '../config/game';
-import { textCanvas, textWidth } from '../art/font';
 import { audio } from '../systems/Audio';
 import { load, save } from '../systems/Storage';
 import { makeCanvas, rect } from '../art/px';
+import { HD } from '../art/hd';
+import { panelHD, buttonHD } from '../art/uiHD';
 
 /** Point a scene's camera at the 480 x 270 layout space on the high-resolution canvas. */
 export function fitUi(scene: Phaser.Scene) {
@@ -16,12 +17,20 @@ export function uiText(scene: Phaser.Scene, x: number, y: number, str: string, s
     stroke: '#1a1220', strokeThickness: size >= 10 ? 1.4 : 1, resolution: ZOOM,
   });
 }
-/** Quiet dark panel that sits behind interface text without hiding the world. */
+/** Quiet dark panel that sits behind interface text without hiding the world (HD: show at HD scale). */
 export function darkPanel(w: number, h: number, edge = 'rgba(246,231,193,0.28)'): HTMLCanvasElement {
-  const [c, ctx] = makeCanvas(w, h);
-  rect(ctx, 1, 0, w - 2, h, 'rgba(22,16,28,0.74)'); rect(ctx, 0, 1, w, h - 2, 'rgba(22,16,28,0.74)');
-  rect(ctx, 2, 0, w - 4, 1, edge); rect(ctx, 2, h - 1, w - 4, 1, edge); rect(ctx, 0, 2, 1, h - 4, edge); rect(ctx, w - 1, 2, 1, h - 4, edge);
-  return c;
+  return panelHD(w, h, edge, { radius: Math.min(4, h / 2 - 1), alpha: 0.8 });
+}
+/** Headings: a heavy rounded display face with a dark rim, the in-world counterpart of the logo. */
+export function displayText(scene: Phaser.Scene, x: number, y: number, str: string, color = '#ffe9a8', scale = 2, center = false): Phaser.GameObjects.Text {
+  const size = 5 + scale * 4.2;
+  const t = scene.add.text(x, y, str.toUpperCase(), {
+    fontFamily: UI_FONT, fontSize: `${size}px`, fontStyle: '900', color,
+    stroke: '#1a1220', strokeThickness: Math.max(2, size * 0.2), resolution: ZOOM,
+    shadow: { offsetX: 0, offsetY: size * 0.08, color: 'rgba(0,0,0,0.55)', blur: size * 0.15, stroke: true, fill: true },
+  }).setLetterSpacing(scale * 0.6);
+  if (center) t.setOrigin(0.5, 0);
+  return t;
 }
 
 export type BtnStyle = 'primary' | 'secondary' | 'link';
@@ -40,12 +49,12 @@ export class UiScene extends Phaser.Scene {
   protected initUi() {
     fitUi(this);
     this.root = this.add.container(0, 0);
-    this.cursor = this.add.image(0, 0, 'reticle').setDepth(1000);
+    this.cursor = this.add.image(0, 0, 'reticle').setScale(HD).setDepth(1000);
     this.btns = []; this.keys = []; this.sel = 0;
   }
   protected tx(c: HTMLCanvasElement): string {
     const key = `${this.scene.key}-${this.n++}`;
-    this.textures.addCanvas(key, c);
+    this.textures.addCanvas(key, c)!.setFilter(Phaser.Textures.FilterMode.LINEAR);
     this.keys.push(key);
     return key;
   }
@@ -54,10 +63,16 @@ export class UiScene extends Phaser.Scene {
     this.keys.forEach((k) => this.textures.remove(k));
     this.keys = []; this.btns = []; this.sel = 0;
   }
-  protected text(x: number, y: number, s: string, color: string = PAL.cream, scale = 1, center = false) {
-    const img = this.add.image(center ? Math.round(x - textWidth(s, scale) / 2) : x, y, this.tx(textCanvas(s, color, PAL.ink, scale))).setOrigin(0);
+  /** Show a canvas drawn at ART density (see hd.ts) at its world size. */
+  protected hd(x: number, y: number, c: HTMLCanvasElement) {
+    const img = this.add.image(x, y, this.tx(c)).setOrigin(0).setScale(HD);
     this.root.add(img);
     return img;
+  }
+  protected text(x: number, y: number, s: string, color: string = PAL.cream, scale = 1, center = false) {
+    const t = displayText(this, x, y - scale * 0.6, s, color, scale, center);
+    this.root.add(t);
+    return t;
   }
   protected sans(x: number, y: number, s: string, size = 8, color = '#f6e7c1', bold = false, center = false) {
     const t = uiText(this, x, y, s, size, color, bold);
@@ -67,15 +82,7 @@ export class UiScene extends Phaser.Scene {
   }
   /** The one modal surface used by every overlay: dark, quiet, thin border (gold for good news / focus). */
   protected panel(x: number, y: number, w: number, h: number, gold = false) {
-    const [c, ctx] = makeCanvas(w, h + 3);
-    rect(ctx, 2, 3, w - 4, h, 'rgba(8,6,14,0.45)'); // soft drop shadow
-    rect(ctx, 1, 0, w - 2, h, 'rgba(26,20,36,0.95)'); rect(ctx, 0, 1, w, h - 2, 'rgba(26,20,36,0.95)');
-    const edge = gold ? 'rgba(246,210,74,0.95)' : 'rgba(246,231,193,0.38)';
-    rect(ctx, 2, 0, w - 4, 1, edge); rect(ctx, 2, h - 1, w - 4, 1, edge); rect(ctx, 0, 2, 1, h - 4, edge); rect(ctx, w - 1, 2, 1, h - 4, edge);
-    rect(ctx, 2, 1, w - 4, 1, 'rgba(255,255,255,0.05)');
-    const img = this.add.image(x, y, this.tx(c)).setOrigin(0);
-    this.root.add(img);
-    return img;
+    return this.hd(x, y, panelHD(w, h, gold ? 'rgba(246,210,74,0.95)' : 'rgba(246,231,193,0.38)'));
   }
   /** Even scrim behind a modal: the world stays visible but recedes. */
   protected dim(alpha = 0.6) {
@@ -102,29 +109,20 @@ export class UiScene extends Phaser.Scene {
   protected button(cx: number, y: number, w: number, label: string, act: () => void, opts: BtnOpts = {}): Btn {
     const style = opts.style ?? 'secondary', h = opts.h ?? (style === 'primary' ? 20 : 16);
     const c = this.add.container(Math.round(cx - w / 2), y);
-    const face = (on: boolean) => {
-      const [k, ctx] = makeCanvas(w, h + 2);
-      if (style === 'link') { if (on) rect(ctx, Math.round(w / 2 - 14), h - 2, 28, 1, '#f6d24a'); return k; }
-      const fill = style === 'primary' ? (on ? '#ffe98a' : '#f6d24a') : on ? 'rgba(58,46,74,0.96)' : 'rgba(26,20,36,0.9)';
-      const edge = style === 'primary' ? '#2b1b2e' : on ? '#f6d24a' : 'rgba(246,231,193,0.4)';
-      rect(ctx, 1, 2, w - 2, h, 'rgba(8,6,14,0.5)');
-      rect(ctx, 1, 0, w - 2, h, edge); rect(ctx, 0, 1, w, h - 2, edge);
-      rect(ctx, 1, 1, w - 2, h - 2, fill);
-      if (style === 'primary') { rect(ctx, 1, 1, w - 2, 1, '#fffbe0'); rect(ctx, 1, h - 3, w - 2, 2, on ? '#e0a92e' : '#c98a1c'); }
-      return k;
-    };
-    const off = this.add.image(0, 0, this.tx(face(false))).setOrigin(0);
-    const on = this.add.image(0, 0, this.tx(face(true))).setOrigin(0).setVisible(false);
-    const dark = style === 'primary';
-    const t = uiText(this, w / 2, Math.round(h / 2) - (dark ? 1 : 0), label, style === 'primary' ? 9 : style === 'link' ? 7.5 : 8, dark ? '#2b1b2e' : style === 'link' ? '#c9d4b8' : '#f6e7c1', true).setOrigin(0.5, 0.5);
+    const dis = !!opts.disabled && style !== 'link';
+    const off = this.add.image(0, 0, this.tx(buttonHD(w, h, style, false, dis))).setOrigin(0).setScale(HD);
+    const on = this.add.image(0, 0, this.tx(buttonHD(w, h, style, true, dis))).setOrigin(0).setScale(HD).setVisible(false);
+    const dark = style === 'primary' && !dis;
+    const rest = dis ? '#8d8496' : style === 'link' ? '#c9d4b8' : '#f6e7c1', lit = dis ? '#cfc4ad' : '#fff3a0';
+    const t = uiText(this, w / 2, Math.round(h / 2) - (dark ? 1 : 0), label, style === 'primary' ? 9 : style === 'link' ? 7.5 : 8, dark ? '#2b1b2e' : rest, true).setOrigin(0.5, 0.5);
     if (dark) t.setStroke('#2b1b2e', 0);
     c.add([off, on, t]);
-    if (opts.disabled) { off.setAlpha(0.45); on.setAlpha(0.6); t.setAlpha(0.55); }
+    if (opts.disabled && !dis) t.setAlpha(0.55);
     this.root.add(c);
     const y0 = y;
     const b: Btn = {
       c, act, adjust: opts.adjust,
-      select: (v) => { on.setVisible(v); off.setVisible(!v); if (!dark) t.setColor(v ? '#fff3a0' : style === 'link' ? '#c9d4b8' : '#f6e7c1'); c.y = v && style !== 'link' ? y0 - 1 : y0; },
+      select: (v) => { on.setVisible(v); off.setVisible(!v); if (!dark) t.setColor(v ? lit : rest); c.y = v && style !== 'link' ? y0 - 1 : y0; },
     };
     const i = this.btns.length;
     const hit = this.add.zone(0, 0, w, h).setOrigin(0).setInteractive({ useHandCursor: false });
