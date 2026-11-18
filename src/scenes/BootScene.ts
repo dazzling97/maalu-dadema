@@ -11,7 +11,7 @@ export class BootScene extends Phaser.Scene {
   create() {
     this.cameras.main.setBackgroundColor('#16261d');
     fitUi(this);
-    displayText(this, VIEW.w / 2, VIEW.h / 2 - 22, 'Maalu Dadema', PAL.cream, 3, true);
+    displayText(this, VIEW.w / 2, VIEW.h / 2 - 22, 'Malu Dadayama', PAL.cream, 3, true);
     const sub = uiText(this, VIEW.w / 2, VIEW.h / 2 + 8, 'Filling the wewa…', 8, '#8fcb55', true).setOrigin(0.5, 0);
     this.tweens.add({ targets: sub, alpha: 0.45, duration: 650, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
     // give the loading card one frame on screen before the (synchronous) art pass
