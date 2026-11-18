@@ -244,8 +244,9 @@ function head(P: Painter, s: CharSpec, p: Pose, view: 'front' | 'back' | 'side')
     if (view !== 'back') P.curve(cx - 2.4, cy - 4.6, cx - 2.2, cy - 6.2, cx - 0.6, cy - 6.4, 'rgba(255,255,255,0.3)', 0.4); // the parting
     // greying temples
     const t = s.hairCol[1];
-    if (view === 'front') { P.flat(ell(cx - 6, cy + 0.2, 0.8, 1.6), t); P.flat(ell(cx + 6, cy + 0.2, 0.8, 1.6), t); }
-    else if (view === 'side') P.flat(ell(cx + 2.8, cy - 0.6, 1.1, 1.6), t);
+    // thin streaks inside the hairline (separate blobs over the ears read as headphones)
+    if (view === 'front') { P.curve(cx - 5.9, cy - 0.2, cx - 6.1, cy - 2.6, cx - 4.6, cy - 4.2, t, 0.75); P.curve(cx + 5.9, cy - 0.2, cx + 6.1, cy - 2.6, cx + 4.6, cy - 4.2, t, 0.75); }
+    else if (view === 'side') P.curve(cx + 1.4, cy - 1.9, cx + 3.2, cy - 2.6, cx + 4.6, cy - 0.6, t, 0.75);
   } else {
     // bald on top with a shine; a horseshoe of hair round the back
     // a thin greying fringe, close to the head (it must never read as ear-muffs)
@@ -339,5 +340,14 @@ export function charSheetHD(spec: CharSpec): HTMLCanvasElement {
       ctx.restore();
     }
   });
+  return c;
+}
+
+/** A sharp still of the front idle pose for menus, drawn at `k` times the sheet density. */
+export function charPortraitHD(spec: CharSpec, k = 3): HTMLCanvasElement {
+  const { fw, fh } = HCHAR;
+  const [c, ctx] = hdCanvas(fw * k, fh * k);
+  ctx.scale(k, k);
+  drawFront(new Painter(ctx), spec, poseFor(HCOL.idle, spec), false);
   return c;
 }

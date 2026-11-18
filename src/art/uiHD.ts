@@ -27,8 +27,43 @@ export function panelHD(w: number, h: number, edge = 'rgba(246,231,193,0.38)', o
   x.strokeStyle = edge; x.lineWidth = 0.6; x.stroke(rr(0.8, 0.8, w - 1.6, h - 1.6, r - 0.3));
   return c;
 }
+/**
+ * A little stage behind characters and props on menu cards: a sunlit lawn, open
+ * water, or a shore (lawn on the left `split` units, water beyond), with soft
+ * inner shading so it sits inside the panel rather than on top of it.
+ */
+export function stageHD(w: number, h: number, kind: 'grass' | 'water' | 'shore', opts: { split?: number; dim?: boolean } = {}): HTMLCanvasElement {
+  const [c, x] = hdCanvas(w, h), r = 2.4, body = rr(0, 0, w, h, r);
+  x.save(); x.clip(body);
+  const grass = () => lin(x, 0, 0, 0, h, [[0, '#7fbf55'], [0.55, '#5f9e3f'], [1, '#467c32']]);
+  const water = () => lin(x, 0, 0, 0, h, [[0, '#3aa0b4'], [0.6, '#22788f'], [1, '#195d74']]);
+  x.fillStyle = kind === 'water' ? water() : grass(); x.fillRect(0, 0, w, h);
+  if (kind !== 'grass') {
+    const s = kind === 'water' ? 0 : (opts.split ?? w * 0.35);
+    if (s > 0) {
+      const shore = new Path2D(); shore.moveTo(s, 0); shore.bezierCurveTo(s + 6, h * 0.35, s - 6, h * 0.65, s + 2, h); shore.lineTo(w, h); shore.lineTo(w, 0); shore.closePath();
+      x.fillStyle = 'rgba(232,206,150,0.9)'; x.save(); x.translate(-1.6, 0); x.fill(shore); x.restore(); // wet sand
+      x.fillStyle = water(); x.fill(shore);
+      x.strokeStyle = 'rgba(255,255,255,0.5)'; x.lineWidth = 0.5; x.save(); x.translate(1.2, 0); x.stroke(shore); x.restore(); // foam line
+    }
+    x.strokeStyle = 'rgba(255,255,255,0.22)'; x.lineWidth = 0.45; x.lineCap = 'round';
+    for (let i = 0; i < 14; i++) { const px = s + 6 + ((i * 37) % Math.max(1, w - s - 12)), py = 4 + ((i * 23) % Math.max(1, h - 8)); x.beginPath(); x.moveTo(px, py); x.quadraticCurveTo(px + 2.5, py - 1, px + 5, py); x.stroke(); }
+  }
+  if (kind !== 'water') {
+    const lim = kind === 'shore' ? (opts.split ?? w * 0.35) - 2 : w;
+    x.strokeStyle = 'rgba(40,80,28,0.55)'; x.lineWidth = 0.4; x.lineCap = 'round';
+    for (let i = 0; i < Math.round(lim * h / 60); i++) { const px = 2 + ((i * 53) % Math.max(1, lim - 4)), py = 3 + ((i * 29) % (h - 5)); x.beginPath(); x.moveTo(px - 0.8, py + 1.4); x.lineTo(px, py); x.moveTo(px + 0.8, py + 1.4); x.lineTo(px + 0.3, py - 0.2); x.stroke(); }
+    x.fillStyle = lin(x, 0, h * 0.55, 0, h, [[0, 'rgba(255,240,180,0)'], [1, 'rgba(30,50,20,0.25)']]); x.fillRect(0, 0, lim, h);
+  }
+  const vg = x.createRadialGradient(w * 0.4, h * 0.3, Math.min(w, h) * 0.2, w / 2, h / 2, Math.max(w, h) * 0.7);
+  vg.addColorStop(0, 'rgba(255,248,214,0.16)'); vg.addColorStop(1, 'rgba(10,8,18,0.38)'); x.fillStyle = vg; x.fillRect(0, 0, w, h);
+  if (opts.dim) { x.fillStyle = 'rgba(18,14,26,0.4)'; x.fillRect(0, 0, w, h); }
+  x.restore();
+  x.strokeStyle = 'rgba(10,8,18,0.6)'; x.lineWidth = 0.6; x.stroke(rr(0.3, 0.3, w - 0.6, h - 0.6, r));
+  return c;
+}
 /** Button faces. `on` = focused / hovered. */
-export function buttonHD(w: number, h: number, style: 'primary' | 'secondary' | 'link', on: boolean): HTMLCanvasElement {
+export function buttonHD(w: number, h: number, style: 'primary' | 'secondary' | 'link', on: boolean, disabled = false): HTMLCanvasElement {
   const [c, x] = hdCanvas(w, h + 2);
   if (style === 'link') {
     if (on) { x.fillStyle = lin(x, w / 2 - 16, 0, w / 2 + 16, 0, [[0, 'rgba(246,210,74,0)'], [0.5, '#f6d24a'], [1, 'rgba(246,210,74,0)']]); x.fillRect(w / 2 - 16, h - 1.6, 32, 0.7); }
@@ -36,7 +71,12 @@ export function buttonHD(w: number, h: number, style: 'primary' | 'secondary' | 
   }
   const r = Math.min(4, h / 2 - 1), body = rr(0.6, 0.6, w - 1.2, h - 1.2, r);
   x.save(); x.shadowColor = 'rgba(6,4,12,0.55)'; x.shadowBlur = on ? 5 : 3; x.shadowOffsetY = 1.4; x.fillStyle = '#000'; x.fill(body); x.restore();
-  if (style === 'primary') {
+  if (disabled) {
+    // recessed slate: no gloss, no gold, so it reads as "not yet" at a glance
+    x.fillStyle = lin(x, 0, 0, 0, h, [[0, 'rgba(22,18,30,0.96)'], [1, 'rgba(38,33,46,0.96)']]); x.fill(body);
+    x.save(); x.clip(body); x.fillStyle = lin(x, 0, 0, 0, 3, [[0, 'rgba(0,0,0,0.35)'], [1, 'rgba(0,0,0,0)']]); x.fillRect(0, 0, w, 3); x.restore();
+    x.strokeStyle = on ? 'rgba(246,231,193,0.6)' : 'rgba(246,231,193,0.2)'; x.lineWidth = 0.55; x.setLineDash(on ? [] : [1.6, 1.2]); x.stroke(rr(0.9, 0.9, w - 1.8, h - 1.8, r - 0.3)); x.setLineDash([]);
+  } else if (style === 'primary') {
     if (on) { x.save(); x.shadowColor = 'rgba(255,214,90,0.75)'; x.shadowBlur = 7; x.fillStyle = '#f6d24a'; x.fill(body); x.restore(); }
     x.fillStyle = lin(x, 0, 0, 0, h, on ? [[0, '#fff3b0'], [0.45, '#ffd85a'], [1, '#e09a24']] : [[0, '#fbe68a'], [0.45, '#f6c93e'], [1, '#c98a1c']]); x.fill(body);
     x.save(); x.clip(body); x.fillStyle = 'rgba(255,255,255,0.45)'; x.fill(rr(2, 1.4, w - 4, h * 0.32, r * 0.8)); x.restore();

@@ -109,18 +109,20 @@ export class UiScene extends Phaser.Scene {
   protected button(cx: number, y: number, w: number, label: string, act: () => void, opts: BtnOpts = {}): Btn {
     const style = opts.style ?? 'secondary', h = opts.h ?? (style === 'primary' ? 20 : 16);
     const c = this.add.container(Math.round(cx - w / 2), y);
-    const off = this.add.image(0, 0, this.tx(buttonHD(w, h, style, false))).setOrigin(0).setScale(HD);
-    const on = this.add.image(0, 0, this.tx(buttonHD(w, h, style, true))).setOrigin(0).setScale(HD).setVisible(false);
-    const dark = style === 'primary';
-    const t = uiText(this, w / 2, Math.round(h / 2) - (dark ? 1 : 0), label, style === 'primary' ? 9 : style === 'link' ? 7.5 : 8, dark ? '#2b1b2e' : style === 'link' ? '#c9d4b8' : '#f6e7c1', true).setOrigin(0.5, 0.5);
+    const dis = !!opts.disabled && style !== 'link';
+    const off = this.add.image(0, 0, this.tx(buttonHD(w, h, style, false, dis))).setOrigin(0).setScale(HD);
+    const on = this.add.image(0, 0, this.tx(buttonHD(w, h, style, true, dis))).setOrigin(0).setScale(HD).setVisible(false);
+    const dark = style === 'primary' && !dis;
+    const rest = dis ? '#8d8496' : style === 'link' ? '#c9d4b8' : '#f6e7c1', lit = dis ? '#cfc4ad' : '#fff3a0';
+    const t = uiText(this, w / 2, Math.round(h / 2) - (dark ? 1 : 0), label, style === 'primary' ? 9 : style === 'link' ? 7.5 : 8, dark ? '#2b1b2e' : rest, true).setOrigin(0.5, 0.5);
     if (dark) t.setStroke('#2b1b2e', 0);
     c.add([off, on, t]);
-    if (opts.disabled) { off.setAlpha(0.45); on.setAlpha(0.6); t.setAlpha(0.55); }
+    if (opts.disabled && !dis) t.setAlpha(0.55);
     this.root.add(c);
     const y0 = y;
     const b: Btn = {
       c, act, adjust: opts.adjust,
-      select: (v) => { on.setVisible(v); off.setVisible(!v); if (!dark) t.setColor(v ? '#fff3a0' : style === 'link' ? '#c9d4b8' : '#f6e7c1'); c.y = v && style !== 'link' ? y0 - 1 : y0; },
+      select: (v) => { on.setVisible(v); off.setVisible(!v); if (!dark) t.setColor(v ? lit : rest); c.y = v && style !== 'link' ? y0 - 1 : y0; },
     };
     const i = this.btns.length;
     const hit = this.add.zone(0, 0, w, h).setOrigin(0).setInteractive({ useHandCursor: false });
