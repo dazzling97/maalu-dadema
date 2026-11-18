@@ -169,7 +169,7 @@ export class WorldScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => { ev.off('heist', onHeist); ev.off('prowl', onProwl); });
 
     this.bagLabel = uiText(this, BAG_POS.x, BAG_POS.y - 36, '', 8, '#ffe9a8', true).setOrigin(0.5).setDepth(DEPTH.air + 1);
-    this.prompt = this.add.image(0, 0, 'key-e').setOrigin(0.5, 1).setDepth(DEPTH.air + 4).setVisible(false);
+    this.prompt = this.add.image(0, 0, 'key-e').setScale(HD).setOrigin(0.5, 1).setDepth(DEPTH.air + 4).setVisible(false);
     this.promptLabel = uiText(this, 0, 0, 'Shop', 7, '#fff6d8', true).setOrigin(0, 0.5).setDepth(DEPTH.air + 4).setVisible(false);
     this.tipQueue = [];
     this.bagChanged();

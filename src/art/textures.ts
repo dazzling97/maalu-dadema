@@ -7,24 +7,13 @@ import * as S from './sceneryHD';
 import { charSheetHD, HCHAR, HCOL } from './charactersHD';
 import { paintGroundHD } from './groundHD';
 import { waterMasks, rippleTile, swellTile, foamTile, glintCanvas, raysHD, gradeHD, vignetteHD, shadowHD } from './waterHD';
-import * as P from './props';
 import { FISH } from '../config/balance';
-import { keycap } from './ui';
+import * as U from './uiHD';
 import { SPECS, DIRS } from './characters';
 
 /** Origins (ground-contact point, 0..1) for every sheet, keyed by texture. */
 export const ORIGIN: Record<string, { x: number; y: number }> = {};
 
-function addSheet(scene: Phaser.Scene, key: string, s: P.Sheet) {
-  const tex = scene.textures.addCanvas(key, s.canvas)!;
-  const cols = Math.floor(s.canvas.width / s.fw), rows = Math.floor(s.canvas.height / s.fh);
-  let n = 0;
-  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) tex.add(n++, 0, c * s.fw, r * s.fh, s.fw, s.fh);
-  ORIGIN[key] = { x: s.ox / s.fw, y: s.oy / s.fh };
-}
-function addCanvas(scene: Phaser.Scene, key: string, c: HTMLCanvasElement) {
-  scene.textures.addCanvas(key, c);
-}
 const frames = (key: string, list: number[]) => list.map((f) => ({ key, frame: f }));
 
 /**
@@ -62,7 +51,7 @@ export function buildTextures(scene: Phaser.Scene, L: Layout) {
   ORIGIN['reeds'] = addHDSheet(scene, 'reeds', S.reedsHD());
   ORIGIN['lily'] = addHDSheet(scene, 'lily', S.lilyHD());
   ORIGIN['fence'] = addHDSheet(scene, 'fence', S.fenceHD());
-  addSheet(scene, 'stones', P.stonesSheet()); // HUD icon (pixel until the UI pass)
+  ORIGIN.stones = addHDSheet(scene, 'stones', FX.stonesHD()); // HUD icon
   ORIGIN.stonesHD = addHDSheet(scene, 'stonesHD', FX.stonesHD());
   ORIGIN['basket'] = addHDSheet(scene, 'basket', S.basketHD());
   ORIGIN['crate'] = addHDSheet(scene, 'crate', S.crateHD());
@@ -81,33 +70,33 @@ export function buildTextures(scene: Phaser.Scene, L: Layout) {
   ORIGIN.puff = addHDSheet(scene, 'puff', FX.puffSheetHD());
   addHD(scene, 'wake', FX.wakeCanvas());
   ORIGIN['leaf'] = addHDSheet(scene, 'leaf', S.leafHD());
-  addSheet(scene, 'catch', P.catchSheet(FISH)); // HUD icon (pixel until the UI pass)
+  ORIGIN.catch = addHDSheet(scene, 'catch', FX.catchSheetHD(FISH)); // HUD icon
   ORIGIN.catchHD = addHDSheet(scene, 'catchHD', FX.catchSheetHD(FISH));
   ORIGIN.bobber = addHDSheet(scene, 'bobber', FX.bobberSheetHD());
   addHD(scene, 'bang', FX.bubbleHD('#f6d24a', '#fff3a0', '#b3261e'));
   addHD(scene, 'drop', FX.dropHD());
-  addCanvas(scene, 'key-space', keycap('SPACE'));
+  addHD(scene, 'key-space', U.keycapHD('SPACE'));
   ORIGIN.croc = addHDSheet(scene, 'croc', FX.crocSheetHD());
   ORIGIN.crocDark = addHDSheet(scene, 'crocDark', FX.crocSheetHD(['#27382a', '#3a5238', '#4b6a44', '#648452'], '#b5b890'));
-  addSheet(scene, 'bag', P.bagSheet()); // HUD icon (pixel until the UI pass)
+  ORIGIN.bag = addHDSheet(scene, 'bag', S.bagHD()); // HUD icon
   ORIGIN.bagHD = addHDSheet(scene, 'bagHD', S.bagHD());
   ORIGIN['lella'] = addHDSheet(scene, 'lella', S.lellaHD());
-  addSheet(scene, 'gear', P.gearSheet());
+  ORIGIN.gear = addHDSheet(scene, 'gear', U.gearIconsHD());
   ORIGIN['shopSign'] = addHDSheet(scene, 'shopSign', S.shopSignHD());
   ORIGIN.net = addHDSheet(scene, 'net', FX.netSheetHD());
-  addCanvas(scene, 'warn', P.warnIconCanvas());
-  addCanvas(scene, 'clock', P.clockCanvas());
-  addCanvas(scene, 'key-q', keycap('Q'));
-  addCanvas(scene, 'key-e', keycap('E'));
+  addHD(scene, 'warn', U.warnHD());
+  addHD(scene, 'clock', U.clockHD());
+  addHD(scene, 'key-q', U.keycapHD('Q'));
+  addHD(scene, 'key-e', U.keycapHD('E'));
   { ORIGIN.sign = addHDSheet(scene, 'sign', S.signHD()); ORIGIN.signA = ORIGIN.signB = ORIGIN.signC = ORIGIN.sign; }
   ORIGIN['stump'] = addHDSheet(scene, 'stump', S.stumpHD());
-  addCanvas(scene, 'coin', P.coinCanvas());
-  addSheet(scene, 'heart', P.heartSheet());
+  addHD(scene, 'coin', U.coinHD());
+  ORIGIN.heart = addHDSheet(scene, 'heart', U.heartsHD());
   addHD(scene, 'alert', FX.bubbleHD('#e8433f', '#ff8a70', '#ffffff'));
   addHD(scene, 'loot', S.lootHD());
-  addCanvas(scene, 'arrow', P.arrowCanvas());
+  addHD(scene, 'arrow', U.arrowHD());
   addHD(scene, 'stone', FX.stoneHD());
-  addCanvas(scene, 'reticle', P.reticleCanvas());
+  addHD(scene, 'reticle', U.reticleHD());
   addHD(scene, 'shadow', shadowHD());
   addHD(scene, 'rays', raysHD());
   addHD(scene, 'grade', gradeHD(VIEW.w, VIEW.h));

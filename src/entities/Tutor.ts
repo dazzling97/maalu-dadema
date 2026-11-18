@@ -10,6 +10,7 @@ import { Player } from './Player';
 import { Stones } from './Stones';
 import { Crocs, Crocodile } from './Crocodile';
 import { Thief } from './Thief';
+import { HD } from '../art/hd';
 import { Loot } from './Loot';
 
 /** What the HUD shows for a tutorial: one line, an optional second, a small icon. */
@@ -50,7 +51,7 @@ export class Tutor {
     const s = load();
     this.tut = new Tutorials(s.tutorials, s.hints, (done) => save({ tutorials: done }));
     this.g = c.scene.add.graphics().setDepth(DEPTH.air + 5);
-    this.arrow = c.scene.add.image(0, 0, 'arrow').setDepth(DEPTH.air + 5).setRotation(Math.PI / 2).setVisible(false);
+    this.arrow = c.scene.add.image(0, 0, 'arrow').setScale(HD).setDepth(DEPTH.air + 5).setRotation(Math.PI / 2).setVisible(false);
     this.keyX = c.scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.X);
     this.emit(null);
   }

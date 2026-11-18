@@ -6,7 +6,6 @@ import { Layout, waterZone } from '../world/layout';
 import { Economy } from '../systems/Economy';
 import { ZoneState } from '../systems/Zones';
 import { ORIGIN } from '../art/textures';
-import { textCanvas } from '../art/font';
 import { Player } from './Player';
 import { Input } from '../systems/Input';
 import { Ambient } from './Ambient';
@@ -63,7 +62,7 @@ export class Fishing {
     this.gfx = scene.add.graphics();
     this.bob = scene.add.image(0, 0, 'bobber', 0).setScale(HD).setOrigin(ORIGIN.bobber.x, ORIGIN.bobber.y).setVisible(false);
     this.bang = scene.add.image(0, 0, 'bang').setScale(HD).setOrigin(0.5, 1).setDepth(DEPTH.air + 5).setVisible(false);
-    this.prompt = scene.add.image(0, 0, 'key-space').setOrigin(0.5, 1).setDepth(DEPTH.air + 4).setVisible(false);
+    this.prompt = scene.add.image(0, 0, 'key-space').setScale(HD).setOrigin(0.5, 1).setDepth(DEPTH.air + 4).setVisible(false);
     this.marker = scene.add.sprite(0, 0, 'ring', 1).setScale(HD).setDepth(DEPTH.waterFx + 2).setVisible(false);
     this.lurker = scene.add.sprite(0, 0, 'fish', 0).setScale(HD).setDepth(DEPTH.fish).setAlpha(0).play('fish-dark');
   }

@@ -1,10 +1,9 @@
 import Phaser from 'phaser';
 import { VIEW, PAL } from '../config/game';
-import { fitUi } from './UiScene';
+import { fitUi, displayText, uiText } from './UiScene';
 import { audio } from '../systems/Audio';
 import { Layout } from '../world/layout';
 import { buildTextures } from '../art/textures';
-import { textCanvas } from '../art/font';
 
 /** Shows a loading card, then generates the world data and every texture. */
 export class BootScene extends Phaser.Scene {
@@ -12,10 +11,9 @@ export class BootScene extends Phaser.Scene {
   create() {
     this.cameras.main.setBackgroundColor('#16261d');
     fitUi(this);
-    this.textures.addCanvas('boot-title', textCanvas('MAALU DADEMA', PAL.cream, '#0c1410', 3));
-    this.textures.addCanvas('boot-sub', textCanvas('FILLING THE WEWA...', '#8fcb55', null, 1));
-    this.add.image(VIEW.w / 2, VIEW.h / 2 - 8, 'boot-title');
-    this.add.image(VIEW.w / 2, VIEW.h / 2 + 14, 'boot-sub');
+    displayText(this, VIEW.w / 2, VIEW.h / 2 - 22, 'Maalu Dadema', PAL.cream, 3, true);
+    const sub = uiText(this, VIEW.w / 2, VIEW.h / 2 + 8, 'Filling the wewa…', 8, '#8fcb55', true).setOrigin(0.5, 0);
+    this.tweens.add({ targets: sub, alpha: 0.45, duration: 650, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
     // give the loading card one frame on screen before the (synchronous) art pass
     const go = () => {
       const layout = new Layout();

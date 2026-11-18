@@ -1,9 +1,8 @@
 import Phaser from 'phaser';
-import { VIEW, PAL } from '../config/game';
+import { VIEW } from '../config/game';
 import { CHARACTERS, RUN, STAGES } from '../config/balance';
-import { makeCanvas, rect, outline } from '../art/px';
-import { drawText, textWidth } from '../art/font';
-import { keycap } from '../art/ui';
+import { makeCanvas, rect } from '../art/px';
+import { logoHD, keycapHD } from '../art/uiHD';
 import { load, save, fmtTime } from '../systems/Storage';
 import { audio } from '../systems/Audio';
 import { UiScene } from './UiScene';
@@ -13,40 +12,6 @@ import { startRun } from './flow';
 type Screen = 'main' | 'chars' | 'how' | 'settings' | 'scores';
 const CX = VIEW.w / 2;
 const VERSION = 'v1.0';
-
-/** Big carved logo: chunky pixel letters with a gold-to-orange face, dark rim and drop shadow. */
-function logoCanvas(sinhala: boolean): HTMLCanvasElement {
-  const S = 6, title = 'MAALU DADEMA';
-  const tw = textWidth(title, S);
-  const [c, ctx] = makeCanvas(tw + 24, 5 * S + (sinhala ? 32 : 10));
-  const [t, tc] = makeCanvas(tw + 4, 5 * S + 4);
-  drawText(tc, title, 2, 2, '#f6d24a', S);
-  const img = tc.getImageData(0, 0, t.width, t.height);
-  for (let y = 0; y < t.height; y++) for (let x = 0; x < t.width; x++) {
-    const i = (y * t.width + x) * 4;
-    if (img.data[i + 3] === 0) continue;
-    const band = Math.floor(((y - 2) / (5 * S)) * 4);
-    const col = [[255, 243, 160], [246, 210, 74], [242, 166, 58], [224, 122, 46]][Math.min(3, Math.max(0, band))];
-    img.data[i] = col[0]; img.data[i + 1] = col[1]; img.data[i + 2] = col[2];
-  }
-  tc.putImageData(img, 0, 0);
-  outline(t, PAL.outline); outline(t, PAL.outline);
-  ctx.globalAlpha = 0.5; ctx.drawImage(t, 12, 5); ctx.globalAlpha = 1;
-  ctx.drawImage(t, 10, 1);
-  if (sinhala) {
-    // Sinhala title set in a real font, then snapped to hard pixels
-    const [s, sc] = makeCanvas(c.width, 20);
-    sc.font = '700 15px "Noto Sans Sinhala", sans-serif';
-    sc.textAlign = 'center'; sc.textBaseline = 'middle'; sc.fillStyle = '#ffe9a8';
-    sc.fillText('මාළු දඩයම', c.width / 2, 10);
-    const d = sc.getImageData(0, 0, s.width, s.height);
-    for (let i = 0; i < d.data.length; i += 4) d.data[i + 3] = d.data[i + 3] > 105 ? 255 : 0;
-    sc.putImageData(d, 0, 0);
-    outline(s, PAL.outline);
-    ctx.drawImage(s, 0, 5 * S + 8);
-  }
-  return c;
-}
 
 export class MenuScene extends UiScene {
   private screen: Screen = 'main';
@@ -117,9 +82,10 @@ export class MenuScene extends UiScene {
   private buildMain() {
     this.gradient();
     const sinhala = this.registry.get('sinhala') === true;
-    const logo = this.add.image(CX, 30, this.tx(logoCanvas(sinhala))).setOrigin(0.5, 0);
+    const L = logoHD(sinhala);
+    const logo = this.add.image(CX, 26, this.tx(L.canvas)).setOrigin(0.5, 0).setScale(HD);
     this.root.add(logo);
-    const subY = 30 + logo.height + 2;
+    const subY = 26 + L.h - (sinhala ? 2 : 4);
     const sub = this.sans(CX, subY, 'The Great Fish Heist', 10, '#f6e7c1', false, true);
     sub.setLetterSpacing(1.5);
     const y0 = subY + 34;
@@ -213,7 +179,7 @@ export class MenuScene extends UiScene {
     this.sans(x + 14, y + 109, c.head, 12, '#ffe9a8', true);
     c.lines.forEach((t, i) => this.sans(x + 14, y + 127 + i * 12, t, 8.5, '#f6e7c1'));
     let kx = x + w - 14;
-    for (const k of [...c.keys].reverse()) { const img = this.add.image(kx, y + 104, this.tx(keycap(k))).setOrigin(1, 0); this.root.add(img); kx -= img.width + 3; }
+    for (const k of [...c.keys].reverse()) { const img = this.add.image(kx, y + 104, this.tx(keycapHD(k))).setOrigin(1, 0).setScale(HD); this.root.add(img); kx -= img.displayWidth + 3; }
     for (let i = 0; i < 4; i++) { const [d, dc] = makeCanvas(4, 4); rect(dc, 0, 0, 4, 4, i === this.card ? '#f6d24a' : '#4a3f58'); this.root.add(this.add.image(CX - 14 + i * 8, y + h - 9, this.tx(d)).setOrigin(0)); }
     const by = 206;
     if (this.card > 0) this.button(CX - 110, by + 2, 70, 'Back', () => { this.card--; this.show('how'); });
