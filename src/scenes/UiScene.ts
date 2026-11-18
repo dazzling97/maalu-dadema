@@ -165,8 +165,8 @@ export class UiScene extends Phaser.Scene {
     const row = i++;
     const left = cx - W / 2, rw = 84, tw = W - rw - 4;
     this.button(left + tw / 2, y, tw, `Tutorials:  ${s.hints ? 'On' : 'Off'}`, () => { save({ hints: !load().hints }); rebuild(row); });
-    const fresh = s.tutorials.length === 0 && s.eased.length === 0;
-    this.button(left + tw + 4 + rw / 2, y, rw, fresh ? 'Reset  ✓' : 'Reset tutorials', () => { save({ tutorials: [], eased: [], hints: true }); rebuild(row + 1); });
+    const fresh = s.tutorials.length === 0 && s.eased.length === 0 && !s.howSeen;
+    this.button(left + tw + 4 + rw / 2, y, rw, fresh ? 'Reset  ✓' : 'Reset tutorials', () => { save({ tutorials: [], eased: [], hints: true, howSeen: false }); rebuild(row + 1); });
     y += 19;
     return y;
   }

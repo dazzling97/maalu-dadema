@@ -12,13 +12,14 @@ export interface Save {
   sfx: number;
   muted: boolean;
   tutorial: boolean; // legacy flag from the old hint bar
+  howSeen: boolean; // the How to Play guide has been shown once (it opens on the first Play)
   tutorials: string[]; // ids of first-time tutorials already completed or skipped
   eased: string[]; // first encounters that have already been made gentler once
   scores: ScoreEntry[];
 }
 
 const KEY = 'maalu-horu-v3';
-const DEFAULT: Save = { charId: 'podipasiya', name: '', shake: true, hints: true, master: 0.8, music: 0.6, sfx: 0.9, muted: false, tutorial: false, tutorials: [], eased: [], scores: [] };
+const DEFAULT: Save = { charId: 'podipasiya', name: '', shake: true, hints: true, master: 0.8, music: 0.6, sfx: 0.9, muted: false, tutorial: false, howSeen: false, tutorials: [], eased: [], scores: [] };
 let cache: Save | null = null;
 
 export function load(): Save {

@@ -53,6 +53,7 @@ export class MenuScene extends UiScene {
   private charIdx = 0;
   private card = 0;
   private first = true;
+  private fromPlay = false; // the guide was opened by Play Game on a first visit: Skip and Esc go straight to the game
   constructor() { super('menu'); }
 
   create() {
@@ -81,9 +82,9 @@ export class MenuScene extends UiScene {
       return;
     }
     if (this.screen === 'how') {
-      if (k === 'ArrowRight' || k === 'Enter' || k === ' ') { audio.play('uiSelect'); if (this.card < 3) { this.card++; this.show('how'); } else startRun(this); }
+      if (k === 'ArrowRight' || k === 'Enter' || k === ' ') { audio.play('uiSelect'); if (this.card < 3) { this.card++; this.show('how'); } else this.leaveHow(true); }
       else if (k === 'ArrowLeft') { if (this.card > 0) { audio.play('uiMove'); this.card--; this.show('how'); } }
-      else if (k === 'Escape') this.show('main');
+      else if (k === 'Escape') this.leaveHow(this.fromPlay);
       return;
     }
     if (k === 'ArrowUp' || k === 'w' || k === 'W') this.focus(this.sel - 1);
@@ -121,8 +122,8 @@ export class MenuScene extends UiScene {
     const sub = this.sans(CX, subY, 'The Great Fish Heist', 10, '#f6e7c1', false, true);
     sub.setLetterSpacing(1.5);
     const y0 = subY + 34;
-    const play = this.button(CX, y0, 132, 'Play Game', () => startRun(this), { style: 'primary', h: 22 });
-    const how = this.button(CX, y0 + 30, 132, 'How to Play', () => { this.card = 0; this.show('how'); });
+    const play = this.button(CX, y0, 132, 'Play Game', () => this.play(), { style: 'primary', h: 22 });
+    const how = this.button(CX, y0 + 30, 132, 'How to Play', () => this.openHow(false));
     const set = this.button(CX, y0 + 54, 80, 'Settings', () => this.show('settings'), { style: 'link', h: 14 });
     const ver = this.sans(VIEW.w - 8, VIEW.h - 13, VERSION, 6, '#c9d4b8').setOrigin(1, 0).setAlpha(0.7);
     if (this.first) { // gentle entrance, once
@@ -163,6 +164,15 @@ export class MenuScene extends UiScene {
   }
 
   // ---------------------------------------------------------------- how to play
+  /** Play Game: a first-time player sees the How to Play guide first, and it ends in the game. */
+  private play() { const s = load(); if (s.howSeen || s.scores.length) startRun(this); else this.openHow(true); } // anyone with a finished run already knows the game
+  private openHow(fromPlay: boolean) { this.fromPlay = fromPlay; this.card = 0; this.show('how'); }
+  /** Leaving the guide by any route counts as having seen it. */
+  private leaveHow(start: boolean) {
+    save({ howSeen: true });
+    this.fromPlay = false;
+    if (start) startRun(this); else this.show('main');
+  }
   /** Four picture cards: one idea each, in plain words. */
   private buildHow() {
     this.dim();
@@ -206,8 +216,8 @@ export class MenuScene extends UiScene {
     for (let i = 0; i < 4; i++) { const [d, dc] = makeCanvas(4, 4); rect(dc, 0, 0, 4, 4, i === this.card ? '#f6d24a' : '#4a3f58'); this.root.add(this.add.image(CX - 14 + i * 8, y + h - 9, this.tx(d)).setOrigin(0)); }
     const by = 206;
     if (this.card > 0) this.button(CX - 110, by + 2, 70, 'Back', () => { this.card--; this.show('how'); });
-    this.button(CX, by + 3, 56, 'Skip', () => this.show('main'), { style: 'link', h: 14 });
-    this.button(CX + 104, by, 92, this.card < 3 ? 'Next' : 'Start Game', () => { if (this.card < 3) { this.card++; this.show('how'); } else startRun(this); }, { style: 'primary', h: 20 });
+    this.button(CX, by + 3, 56, 'Skip', () => this.leaveHow(this.fromPlay), { style: 'link', h: 14 });
+    this.button(CX + 104, by, 92, this.card < 3 ? 'Next' : 'Start Game', () => { if (this.card < 3) { this.card++; this.show('how'); } else this.leaveHow(true); }, { style: 'primary', h: 20 });
     this.focus(this.btns.length - 1);
     this.sans(CX, 234, 'Move  W A S D      Dash  Shift      Cast / reel  Space      Store fish  E      Throw  Click      Pause  Esc', 6.5, '#c9d4b8', false, true);
     this.sans(CX, 245, `Three stages:  ${STAGES.map((st) => `${st.target} fish in ${fmtTime(st.duration)}`).join('   ')}   ·   ${RUN.hearts} hearts each`, 6.5, '#e0c38a', false, true);

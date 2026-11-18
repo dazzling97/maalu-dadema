@@ -47,6 +47,8 @@ E stores carried fish at the bag and opens the gear stall. Q switches equipment.
 
 ## First-time tutorials
 
+The first time a player presses Play Game, the four-card How to Play guide opens first; finishing or skipping it starts the game. It is remembered in `howSeen` (`src/systems/Storage.ts`), skipped for anyone who already has a finished run, and brought back by Settings → Reset tutorials.
+
 Short, contextual lessons that appear the first time each thing matters, one at a time, never pausing the game (`src/systems/Tutorial.ts` holds the rules and is unit-tested; `src/entities/Tutor.ts` triggers, highlights and completes them; the card is drawn by the HUD).
 
 | id | appears when | completes when |
