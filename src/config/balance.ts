@@ -239,7 +239,7 @@ export const EVENTS = {
 // ================================================================ Timed challenge rules
 export const RUN = {
   duration: 300, // seconds (set per stage by applyStage)
-  target: 20, // fish that must be in the bag (set per stage)
+  target: 10, // fish that must be in the bag (set per stage)
   hearts: 3,
   startRocks: 2,
   maxRocks: 5,
@@ -293,9 +293,9 @@ export interface StageDef {
   rockRespawn: number; // seconds
 }
 export const STAGES: StageDef[] = [
-  { name: 'The Fishing Begins', label: 'Easy', target: 20, duration: 180, carryMax: 5, waitMul: 0.8, windowMul: 1, fishStock: 1, crocSpeedMul: 1, crocIntervalMul: 1, crocMaxAdd: 0, thiefCooldownMul: 1, thiefSpeedMul: 1, stealTimeMul: 1, rockShare: 1, rockRespawn: 12 },
-  { name: 'Sabapathi Strikes Back', label: 'Medium', target: 30, duration: 210, carryMax: 5, waitMul: 0.6, windowMul: 0.9, fishStock: 1.6, crocSpeedMul: 1.1, crocIntervalMul: 0.85, crocMaxAdd: 0, thiefCooldownMul: 0.8, thiefSpeedMul: 1.08, stealTimeMul: 1, rockShare: 0.85, rockRespawn: 13 },
-  { name: 'The Final Fish Heist', label: 'Hard', target: 50, duration: 240, carryMax: 5, waitMul: 0.35, windowMul: 0.8, fishStock: 3.4, crocSpeedMul: 1.25, crocIntervalMul: 0.84, crocMaxAdd: 1, thiefCooldownMul: 0.75, thiefSpeedMul: 1.2, stealTimeMul: 0.75, rockShare: 0.75, rockRespawn: 14 },
+  { name: 'The Fishing Begins', label: 'Easy', target: 10, duration: 180, carryMax: 5, waitMul: 0.8, windowMul: 1, fishStock: 1, crocSpeedMul: 1, crocIntervalMul: 1, crocMaxAdd: 0, thiefCooldownMul: 1, thiefSpeedMul: 1, stealTimeMul: 1, rockShare: 1, rockRespawn: 12 },
+  { name: 'Sabapathi Strikes Back', label: 'Medium', target: 24, duration: 210, carryMax: 5, waitMul: 0.6, windowMul: 0.9, fishStock: 1.6, crocSpeedMul: 1.1, crocIntervalMul: 0.85, crocMaxAdd: 0, thiefCooldownMul: 0.8, thiefSpeedMul: 1.08, stealTimeMul: 1, rockShare: 0.85, rockRespawn: 13 },
+  { name: 'The Final Fish Heist', label: 'Hard', target: 34, duration: 240, carryMax: 5, waitMul: 0.35, windowMul: 0.8, fishStock: 3.4, crocSpeedMul: 1.25, crocIntervalMul: 0.84, crocMaxAdd: 1, thiefCooldownMul: 0.75, thiefSpeedMul: 1.2, stealTimeMul: 0.75, rockShare: 0.75, rockRespawn: 14 },
 ];
 /** The stage being played. Systems read their multipliers from here. */
 export const CUR: StageDef & { index: number } = { index: 0, ...STAGES[0] };

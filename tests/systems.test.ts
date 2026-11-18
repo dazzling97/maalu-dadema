@@ -176,18 +176,18 @@ describe('pathfinding', () => {
 
 describe('three fixed stages', () => {
   it('have the required targets and time limits', () => {
-    expect(STAGES.map((s) => [s.target, s.duration])).toEqual([[20, 180], [30, 210], [50, 240]]);
+    expect(STAGES.map((s) => [s.target, s.duration])).toEqual([[10, 180], [24, 210], [34, 240]]);
   });
   it('applying a stage sets the rules every system reads', () => {
     applyStage(2);
-    expect([RUN.target, RUN.duration, CUR.index]).toEqual([50, 240, 2]);
+    expect([RUN.target, RUN.duration, CUR.index]).toEqual([34, 240, 2]);
     const e = new Economy();
-    e.stored = 49; expect(e.won).toBe(false);
-    e.stored = 50; expect(e.won).toBe(true);
+    e.stored = 33; expect(e.won).toBe(false);
+    e.stored = 34; expect(e.won).toBe(true);
     expect(bandAt(239)).toBe(BANDS[BANDS.length - 1]); // the bands are fitted to the stage length
     expect(bandAt(40)).toBe(BANDS[0]);
     applyStage(0);
-    expect([RUN.target, RUN.duration, CUR.index]).toEqual([20, 180, 0]);
+    expect([RUN.target, RUN.duration, CUR.index]).toEqual([10, 180, 0]);
     expect(bandAt(40)).toBe(BANDS[1]);
   });
   it('each stage is harder than the last, within fair limits', () => {

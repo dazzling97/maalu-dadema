@@ -6,8 +6,8 @@ To rebuild `play.html` after changing the code: `npm run build:play`.
 
 A 2D pixel-art fishing survival game set in a Sri Lankan village. Phaser 3 + TypeScript + Vite.
 
-**The challenge:** three fixed stages played in order. Get 20 fish into the stationary bag in 3:00,
-then 30 in 3:30, then 50 in 4:00, with 3 hearts per stage, while crocodiles hunt you at the
+**The challenge:** three fixed stages played in order. Get 10 fish into the stationary bag in 3:00,
+then 24 in 3:30, then 34 in 4:00, with 3 hearts per stage, while crocodiles hunt you at the
 water and Sabapathi raids the bag. Beat Stage 3 and the fisherman pays Sabapathi's shop a visit.
 
 ```bash
