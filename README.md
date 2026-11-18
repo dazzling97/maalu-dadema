@@ -25,6 +25,19 @@ node tests/playtest.cjs average:2,skilled:3   # chosen bots on chosen stages
 WASD / arrows move, Shift dashes. Point at the water and press Space to cast; Space again on the `!`.
 E stores carried fish at the bag and opens the gear stall. Q switches equipment. Walk over rocks to pick them up; left click throws one at the cursor. Esc pauses (Resume Game, Restart Stage, Settings, Quit Game; quitting asks first and returns to the title screen without reloading the page). X dismisses the tutorial card on screen.
 
+### Phones and tablets
+
+Touch controls appear automatically on phones and tablets (Settings → Touch: Auto / On / Off; `?touch=1` or `?touch=0` in the address overrides it). Desktop keyboard and mouse controls are unchanged, and the on-screen controls never show on a desktop unless switched on.
+
+- **Joystick** (left thumb, anywhere on the lower left): full speed in any direction, same as the keyboard. It follows the thumb and springs back when released.
+- **FISH**: casts onto the open water the fisherman is facing (no cursor needed), and reels in when a fish bites; the button glows when a cast is possible and says REEL! on a bite.
+- **ROCK**: arms a throw and shows the throwing range. Tap a crocodile or Sabapathi to throw at where they are right now (a moving target can still be missed). Tap ROCK again, or tap empty ground, to cancel without spending a rock. Out of range says TOO FAR; an empty pocket says so too.
+- **USE**: deposits fish at the bag or opens the shop; it is labelled Deposit or Shop when one is in reach.
+- **DASH**, **GEAR** (appears once you own two pieces of equipment) and **pause** in the top-right corner.
+- Tap a tutorial card to skip it. Tap the name box on the character screen to type a name.
+
+Each control tracks its own finger, so moving and pressing at the same time works, and every way a touch can end (lifting, the browser cancelling it, switching apps or tabs, rotating, pausing) releases everything. The game area blocks page scrolling, pinch and double-tap zoom, text selection and long-press menus; the rest of the page is left alone. In portrait a card suggests turning the device; "Play anyway" dismisses it. Controls keep clear of notches and the home indicator, and are sized for the physical screen: larger on tablets, never smaller than a fingertip.
+
 ## Rules (all in `src/config/balance.ts`)
 
 - `STAGES`: the three stages. Each sets target, time limit, carry limit, bite speed, reaction window,
@@ -91,9 +104,9 @@ it), 85 MB of texture memory, no texture larger than 1440 px, and under 1 ms of 
 src/config/      game.ts (resolution, palette), balance.ts (every tunable number)
 src/world/       layout.ts: pond shape, docks, paths, props, collision grid, zones, rock spots
 src/art/         procedural HD art (*HD.ts) and the texture registry
-src/systems/     Economy, Zones, Director, Events, Pathfind (A*), StateMachine, Input, Storage, Audio
+src/systems/     Economy, Zones, Director, Events, Pathfind (A*), StateMachine, Input, Touch, Page, Storage, Audio
 src/entities/    Player, Fishing, Crocodile, Thief, Stones, Loot, Ambient
-src/scenes/      Boot, World, Hud, Menu, Pause, Result, UiScene (shared kit), flow.ts
+src/scenes/      Boot, World, Hud, Touch (on-screen controls), Menu, Pause, Result, UiScene (shared kit), flow.ts
 tests/           systems.test.ts (unit), playtest.cjs (bots)
 ```
 

@@ -9,6 +9,7 @@ import { audio } from '../systems/Audio';
 import { UiScene } from './UiScene';
 import { HD, hdScale } from '../art/hd';
 import { startRun } from './flow';
+import { touchMode } from '../systems/Touch';
 
 type Screen = 'main' | 'chars' | 'how' | 'settings' | 'scores';
 const CX = VIEW.w / 2;
@@ -124,11 +125,16 @@ export class MenuScene extends UiScene {
       this.sans(x + 60, 166, `Speed ${Math.round(ch.speedMul * 100)}   Luck ${Math.round(ch.luckMul * 100)}`, 6.5, '#e0c38a', false, true);
     });
     this.sans(CX, 187, 'Name on the scoreboard', 7, '#e0c38a', false, true);
-    this.panel(CX - 70, 198, 140, 20, true);
+    const field = this.panel(CX - 70, 198, 140, 20, true);
+    // no keyboard on a phone: tapping the name asks for one with the system's own text box
+    if (touchMode()) field.setInteractive().on('pointerdown', () => this.time.delayedCall(30, () => {
+      const v = window.prompt('Name on the scoreboard (up to 10 letters)', this.name || CHARACTERS[this.charIdx].name);
+      if (v !== null) { this.name = v.toUpperCase().replace(/[^A-Z0-9 ]/g, '').replace(/^ +/, '').slice(0, 10); this.show('chars'); }
+    }));
     const shown = this.name || CHARACTERS[this.charIdx].name.toUpperCase();
     this.sans(CX, 202, `${shown}${this.name.length < 10 ? '_' : ''}`, 10, this.name ? '#fff3a0' : '#b9ad8a', true, true);
     this.button(CX, 226, 118, 'Confirm', () => this.confirmChar(), { style: 'primary', h: 18 });
-    this.footer('Type a name.  Left / Right to choose.  Enter to confirm');
+    this.footer(touchMode() ? 'Tap a fisherman. Tap the name to change it.' : 'Type a name.  Left / Right to choose.  Enter to confirm');
   }
 
   // ---------------------------------------------------------------- how to play
@@ -144,7 +150,13 @@ export class MenuScene extends UiScene {
   /** Four picture cards: one idea each, in plain words. */
   private buildHow() {
     this.dim();
-    const cards = [
+    const tap = touchMode(); // touch players see the on-screen buttons, never keyboard keys
+    const cards = tap ? [
+      { head: 'Catch Fish', lines: ['Walk to the water, face it and tap FISH to cast.', 'Tap FISH again when a fish bites (!).'], keys: ['FISH'] },
+      { head: 'Store Fish', lines: ['You can only carry a few fish at a time.', 'Take them to the fish bag and tap USE.'], keys: ['USE'] },
+      { head: 'Stop Sabapathi', lines: ['He sneaks out of his shop to rob the bag.', 'Tap ROCK, then tap him: he drops the fish.'], keys: ['ROCK'] },
+      { head: 'Survive Crocodiles', lines: ['Move away when one rears up, or tap DASH.', 'Walk over rocks to grab them. Tap ROCK, then the croc.'], keys: ['DASH', 'ROCK'] },
+    ] : [
       { head: 'Catch Fish', lines: ['Point at the water and press Space to cast.', 'Press Space again when a fish bites (!).'], keys: ['MOUSE', 'SPACE'] },
       { head: 'Store Fish', lines: ['You can only carry a few fish at a time.', 'Take them to the fish bag and press E.'], keys: ['W', 'A', 'S', 'D', 'E'] },
       { head: 'Stop Sabapathi', lines: ['He sneaks out of his shop to rob the bag.', 'Hit him with a rock and he drops the fish.'], keys: ['CLICK'] },
@@ -163,7 +175,7 @@ export class MenuScene extends UiScene {
     } else if (this.card === 1) {
       art(hero, 110, 54).play(`${hero}-walk-right`);
       art('catch', 150, 46, 0, 2); art('catch', 166, 56, 1, 2);
-      art('bag', 206, 56, 2, 2); art('key-e', 206, 26, 0, 2);
+      art('bag', 206, 56, 2, 2); art(tap ? 'key-use' : 'key-e', 206, 26, 0, 2);
     } else if (this.card === 2) {
       art('bag', 70, 56, 1, 2);
       art('sabapathi', 150, 54).play('sabapathi-walk-right'); art('loot', 136, 50, 0, 2);
@@ -184,7 +196,8 @@ export class MenuScene extends UiScene {
     this.button(CX, by + 3, 56, 'Skip', () => this.leaveHow(this.fromPlay), { style: 'link', h: 14 });
     this.button(CX + 104, by, 92, this.card < 3 ? 'Next' : 'Start Game', () => { if (this.card < 3) { this.card++; this.show('how'); } else this.leaveHow(true); }, { style: 'primary', h: 20 });
     this.focus(this.btns.length - 1);
-    this.sans(CX, 234, 'Move  W A S D      Dash  Shift      Cast / reel  Space      Store fish  E      Throw  Click      Pause  Esc', 6.5, '#c9d4b8', false, true);
+    this.sans(CX, 234, tap ? 'Move with the joystick      FISH casts and reels      USE stores fish and opens the shop      ROCK, then tap a target      ❚❚ pauses'
+      : 'Move  W A S D      Dash  Shift      Cast / reel  Space      Store fish  E      Throw  Click      Pause  Esc', 6.5, '#c9d4b8', false, true);
     this.sans(CX, 245, `Three stages:  ${STAGES.map((st) => `${st.target} fish in ${fmtTime(st.duration)}`).join('   ')}   ·   ${RUN.hearts} hearts each`, 6.5, '#e0c38a', false, true);
   }
 
@@ -199,7 +212,7 @@ export class MenuScene extends UiScene {
     this.button(CX, y, W, 'Best runs', () => this.show('scores')); y += 23;
     this.button(CX, y, 100, 'Back', () => this.show('main'), { style: 'primary', h: 18 });
     this.soundState(CX, 234);
-    this.footer('Up / Down to choose.  Left / Right to adjust.  Enter to select');
+    this.footer(touchMode() ? 'Tap the left or right side of a volume to change it' : 'Up / Down to choose.  Left / Right to adjust.  Enter to select');
   }
 
   private buildScores() {

@@ -6,7 +6,7 @@ import { Player } from './Player';
 import { HD } from '../art/hd';
 import { audio } from '../systems/Audio';
 
-interface Shot { img: Phaser.GameObjects.Image; shadow: Phaser.GameObjects.Image; x: number; y: number; vx: number; vy: number; t: number; life: number; }
+interface Shot { img: Phaser.GameObjects.Image; shadow: Phaser.GameObjects.Image; x: number; y: number; vx: number; vy: number; t: number; life: number; called: boolean; }
 interface Rock { img: Phaser.GameObjects.Image; x: number; y: number; back: number; }
 export interface StoneTarget { x: number; y: number; bonk(): boolean; }
 
@@ -66,15 +66,19 @@ export class Stones {
     }
   }
 
-  throwAt(tx: number, ty: number): boolean {
+  /** Seconds until the next throw is allowed. */
+  get cooldown() { return Math.max(0, this.cd); }
+  /** Tell the player the pocket is empty. */
+  noRocks() {
+    this.say(this.player.x, this.player.y - 40, 'NO ROCKS! WALK OVER ONE TO GRAB IT', '#ffb0a0');
+    this.scene.game.events.emit('norocks');
+    audio.play('deny');
+  }
+  /** `called`: thrown at a tapped target (touch), so a miss is announced. */
+  throwAt(tx: number, ty: number, called = false): boolean {
     if (this.cd > 0 || !this.player.alive) return false;
     this.cd = STONE.cooldown;
-    if (this.ammo <= 0) {
-      this.say(this.player.x, this.player.y - 40, 'NO ROCKS! WALK OVER ONE TO GRAB IT', '#ffb0a0');
-      this.scene.game.events.emit('norocks');
-      audio.play('deny');
-      return false;
-    }
+    if (this.ammo <= 0) { this.noRocks(); return false; }
     this.ammo--;
     audio.play('throw');
     this.emit();
@@ -85,7 +89,7 @@ export class Stones {
     const dist = Math.min(STONE.range, Math.max(24, len));
     const img = this.scene.add.image(sx, sy, 'stone').setScale(HD);
     const shadow = this.scene.add.image(sx, sy, 'shadow').setScale(0.4 * HD).setDepth(DEPTH.flat + 2);
-    this.shots.push({ img, shadow, x: sx, y: sy, vx: (dx / len) * STONE.speed, vy: (dy / len) * STONE.speed, t: 0, life: dist / STONE.speed });
+    this.shots.push({ img, shadow, x: sx, y: sy, vx: (dx / len) * STONE.speed, vy: (dy / len) * STONE.speed, t: 0, life: dist / STONE.speed, called });
     return true;
   }
 
@@ -119,7 +123,7 @@ export class Stones {
       const hit = this.targets().find((t) => Math.hypot(t.x - s.x, (t.y - 4 - s.y) * 1.3) < STONE.hitRadius);
       if (hit && hit.bonk()) { this.impact(hit.x, hit.y, true); this.onBonk(hit); }
       else if (u < 1) continue;
-      else { this.impact(s.x, s.y, false); audio.play(this.L.pondAt(s.x, s.y) < 0 ? 'splash' : 'thud'); }
+      else { this.impact(s.x, s.y, false); audio.play(this.L.pondAt(s.x, s.y) < 0 ? 'splash' : 'thud'); if (s.called) this.say(s.x, s.y - 16, 'MISSED!', '#f6e7c1'); }
       s.img.destroy(); s.shadow.destroy();
       this.shots.splice(i, 1);
     }

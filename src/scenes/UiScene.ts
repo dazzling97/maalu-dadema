@@ -3,6 +3,7 @@ import { PAL, VIEW, ZOOM, UI_FONT } from '../config/game';
 import { audio } from '../systems/Audio';
 import { load, save } from '../systems/Storage';
 import { makeCanvas, rect } from '../art/px';
+import { touchMode } from '../systems/Touch';
 import { HD } from '../art/hd';
 import { panelHD, buttonHD } from '../art/uiHD';
 
@@ -49,7 +50,7 @@ export class UiScene extends Phaser.Scene {
   protected initUi() {
     fitUi(this);
     this.root = this.add.container(0, 0);
-    this.cursor = this.add.image(0, 0, 'reticle').setScale(HD).setDepth(1000);
+    this.cursor = this.add.image(0, 0, 'reticle').setScale(HD).setDepth(1000).setVisible(!touchMode()); // fingers need no cursor
     this.btns = []; this.keys = []; this.sel = 0;
   }
   protected tx(c: HTMLCanvasElement): string {
@@ -159,7 +160,14 @@ export class UiScene extends Phaser.Scene {
     slider('Music volume', 'music');
     slider('Effects volume', 'sfx');
     toggle('Sound', !s.muted, () => audio.set({ muted: !load().muted }));
-    toggle('Screen shake', s.shake, () => save({ shake: !load().shake }));
+    // screen shake and the touch controls share a row: Auto shows them on phones and tablets only
+    {
+      const row = i++, left = cx - W / 2, hw = (W - 4) / 2;
+      this.button(left + hw / 2, y, hw, `Shake:  ${s.shake ? 'On' : 'Off'}`, () => { save({ shake: !load().shake }); rebuild(row); });
+      const next = { auto: 'on', on: 'off', off: 'auto' } as const;
+      this.button(left + hw + 4 + hw / 2, y, hw, `Touch:  ${s.touch === 'auto' ? 'Auto' : s.touch === 'on' ? 'On' : 'Off'}`, () => { save({ touch: next[load().touch] }); this.cursor.setVisible(!touchMode()); rebuild(row + 1); });
+      y += 19;
+    }
     // tutorials: on/off, and a reset that brings every first-time lesson back
     const row = i++;
     const left = cx - W / 2, rw = 84, tw = W - rw - 4;

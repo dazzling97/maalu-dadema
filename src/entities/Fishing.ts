@@ -12,6 +12,7 @@ import { Ambient } from './Ambient';
 import { audio } from '../systems/Audio';
 import { HD } from '../art/hd';
 import { uiText } from '../scenes/UiScene';
+import { touchMode } from '../systems/Touch';
 
 type FState = 'none' | 'cast' | 'wait' | 'bite' | 'reel' | 'end';
 interface Pt { x: number; y: number; }
@@ -62,11 +63,38 @@ export class Fishing {
     this.gfx = scene.add.graphics();
     this.bob = scene.add.image(0, 0, 'bobber', 0).setScale(HD).setOrigin(ORIGIN.bobber.x, ORIGIN.bobber.y).setVisible(false);
     this.bang = scene.add.image(0, 0, 'bang').setScale(HD).setOrigin(0.5, 1).setDepth(DEPTH.air + 5).setVisible(false);
-    this.prompt = scene.add.image(0, 0, 'key-space').setScale(HD).setOrigin(0.5, 1).setDepth(DEPTH.air + 4).setVisible(false);
+    this.prompt = scene.add.image(0, 0, touchMode() ? 'key-fish' : 'key-space').setScale(HD).setOrigin(0.5, 1).setDepth(DEPTH.air + 4).setVisible(false);
     this.marker = scene.add.sprite(0, 0, 'ring', 1).setScale(HD).setDepth(DEPTH.waterFx + 2).setVisible(false);
     this.lurker = scene.add.sprite(0, 0, 'fish', 0).setScale(HD).setDepth(DEPTH.fish).setAlpha(0).play('fish-dark');
   }
 
+  /** For the touch FISH button: can a cast start here, is a fish biting, or is a cast already out. */
+  get touchState(): 'ready' | 'full' | 'bite' | 'busy' | 'none' {
+    if (this.state === 'bite') return 'bite';
+    if (this.state !== 'none') return 'busy';
+    return this.marker.visible ? (this.eco.room <= 0 ? 'full' : 'ready') : 'none';
+  }
+  /**
+   * Touch play has no cursor, so the cast goes where the fisherman is facing: the
+   * open water in front of him within reach, preferring a spot with a fish in it.
+   */
+  autoAim(): Pt {
+    const p = this.player, f = this.dirVec(), fa = Math.atan2(f.y, f.x);
+    const ok = (x: number, y: number) => this.L.pondAt(x, y) < -5 && !this.L.onDock(x, y, 3);
+    let best: Pt | null = null, bs = Infinity;
+    for (const r of [0.45, 0.6, 0.75, 0.9]) {
+      for (let i = 0; i < 36; i++) {
+        const a = (i / 36) * Math.PI * 2;
+        const diff = Math.abs(Math.atan2(Math.sin(a - fa), Math.cos(a - fa)));
+        if (diff > 1.75) continue; // in front, or off to the side: never behind him
+        const x = p.x + Math.cos(a) * r * FISHING.reach, y = p.y - 4 + Math.sin(a) * r * FISHING.reach;
+        if (!ok(x, y)) continue;
+        const score = diff * 1.6 + Math.abs(r - 0.7) - (this.ambient.fishNear(x, y, FISHING.fishSnap) ? 0.6 : 0);
+        if (score < bs) { bs = score; best = { x, y }; }
+      }
+    }
+    return best ?? { x: p.x, y: p.y };
+  }
   /** Zone currently being drained by the player's line, if any. */
   get fishingZone(): ZoneId | null { return this.state === 'wait' || this.state === 'bite' ? this.zone : null; }
   get busy() { return this.state !== 'none'; }
@@ -290,7 +318,7 @@ export class Fishing {
         if (pressed && p.canAct && !this.locked) {
           if (target && this.eco.room <= 0) { this.floatText(p.sprite.x, p.sprite.y - 38, 'HANDS FULL! TAKE THEM TO THE BAG', '#ffb0a0'); audio.play('deny'); }
           else if (target) this.start(target);
-          else this.floatText(p.sprite.x, p.sprite.y - 38, 'POINT AT THE WATER', PAL.cream);
+          else this.floatText(p.sprite.x, p.sprite.y - 38, touchMode() ? 'FACE THE WATER TO FISH' : 'POINT AT THE WATER', PAL.cream);
         }
         break;
       }

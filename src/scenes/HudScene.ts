@@ -5,6 +5,7 @@ import { HD, hdScale } from '../art/hd';
 import { fmtTime, load } from '../systems/Storage';
 import { fitUi, uiText, darkPanel, displayText } from './UiScene';
 import type { CoachCard } from '../entities/Tutor';
+import { touchMode } from '../systems/Touch';
 
 /** mm:ss with a leading zero, so the strip never changes width. */
 const clock = (t: number) => fmtTime(t).padStart(5, '0');
@@ -86,7 +87,8 @@ export class HudScene extends Phaser.Scene {
 
     // ---- right: fish in hand, and from Stage 2 the gear in hand and Fish Coins
     const shop = CUR.index >= SHOP_OPENS_STAGE;
-    const rw = shop ? 118 : 46, rx = VIEW.w - 6 - rw;
+    const touchUi = touchMode();
+    const rw = shop ? 118 : 46, rx = VIEW.w - 6 - rw - (touchUi ? 24 : 0); // touch: room for the pause button in the corner
     this.box(rx, BY, rw, BH);
     this.add.image(rx + 6, MID, 'bag').setOrigin(0, 0.5).setScale(0.55 * HD);
     this.carriedText = uiText(this, rx + 22, TY, `0/${RUN.carryMax}`, 7.5, '#f6e7c1', true);
@@ -102,7 +104,7 @@ export class HudScene extends Phaser.Scene {
     this.point = this.add.image(0, 0, 'arrow').setScale(HD).setDepth(90).setVisible(false);
 
     this.arrow = this.add.image(0, 0, 'arrow').setScale(HD).setDepth(90).setVisible(false);
-    this.reticle = this.add.image(0, 0, 'reticle').setScale(HD).setDepth(100);
+    this.reticle = this.add.image(0, 0, 'reticle').setScale(HD).setDepth(100).setVisible(!touchUi); // no cursor on touch screens
 
     const ev = this.game.events;
     const on = (name: string, fn: (...a: never[]) => void) => { ev.on(name, fn, this); this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => ev.off(name, fn, this)); };
@@ -185,12 +187,15 @@ export class HudScene extends Phaser.Scene {
     const pad = card.icon ? 26 : 10;
     const t = uiText(this, pad, 5, card.title, 8, '#ffe9a8', true).setOrigin(0, 0);
     const s2 = card.sub ? uiText(this, pad, 16, card.sub, 6.5, '#f6e7c1').setOrigin(0, 0) : null;
-    const skip = uiText(this, 0, 0, 'X  skip', 6, '#b8b0a0').setOrigin(1, 1);
+    const touchUi = touchMode();
+    const skip = uiText(this, 0, 0, touchUi ? 'Tap to skip' : 'X  skip', 6, '#b8b0a0').setOrigin(1, 1);
     const h = s2 ? 29 : 19;
     const w = Math.min(VIEW.w - 16, Math.ceil(Math.max(t.width, s2 ? s2.width : 0)) + pad + 10 + Math.ceil(skip.width) + 8);
     skip.setPosition(w - 6, h - 4);
-    const y = VIEW.h - h - 8;
+    // touch: the thumbs own the bottom corners, so the card sits under the notices instead
+    const y = touchUi ? 44 : VIEW.h - h - 8;
     const c = this.add.container(Math.round(VIEW.w / 2 - w / 2), y + 5).setDepth(80).setAlpha(0);
+    if (touchUi) c.add(this.add.zone(0, 0, w, h).setOrigin(0).setInteractive().on('pointerdown', () => this.game.events.emit('coachSkip')));
     c.add(this.panelImg(0, 0, w, h, 'rgba(246,210,74,0.85)'));
     if (card.icon) c.add(this.add.image(13, h / 2, card.icon, card.frame ?? 0).setScale((card.icon === 'bag' ? 0.6 : 1) * hdScale(card.icon)));
     c.add(t); if (s2) c.add(s2); c.add(skip);
