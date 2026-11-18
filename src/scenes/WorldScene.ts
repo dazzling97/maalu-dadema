@@ -6,7 +6,7 @@ import { ShopApi } from './ShopScene';
 import { Layout, DOCKS, SPAWN, POND_C, BAG_POS, SHOP, SHOP_DOOR, GEAR_POS } from '../world/layout';
 import { ORIGIN } from '../art/textures';
 import { WATER_BOX } from '../art/water';
-import { HD } from '../art/hd';
+import { HD, hdScale } from '../art/hd';
 import { GROUND_TILE, GROUND_COLS, GROUND_ROWS } from '../art/groundHD';
 import { Player } from '../entities/Player';
 import { Thief } from '../entities/Thief';
@@ -79,20 +79,20 @@ export class WorldScene extends Phaser.Scene {
       this.add.image(c * GROUND_TILE.w, r * GROUND_TILE.h, `ground${i}`).setOrigin(0).setScale(HD).setDepth(DEPTH.ground);
     }
     this.buildWater();
-    DOCKS.forEach((D, i) => this.add.image(D.x, D.y, `dock${i}`).setOrigin(ORIGIN[`dock${i}`].x, ORIGIN[`dock${i}`].y).setDepth(DEPTH.flat + 1));
+    DOCKS.forEach((D, i) => this.add.image(D.x, D.y, `dock${i}`).setOrigin(ORIGIN[`dock${i}`].x, ORIGIN[`dock${i}`].y).setScale(hdScale(`dock${i}`)).setDepth(DEPTH.flat + 1));
 
     // lily pads bob gently, each on its own beat
     for (const l of L.lilies) {
-      const s = this.add.image(l.x, l.y, 'lily', l.flower).setOrigin(ORIGIN.lily.x, ORIGIN.lily.y).setDepth(DEPTH.flat);
+      const s = this.add.image(l.x, l.y, 'lily', l.flower).setOrigin(ORIGIN.lily.x, ORIGIN.lily.y).setScale(hdScale('lily')).setDepth(DEPTH.flat);
       this.tweens.add({ targets: s, y: l.y + 1, duration: 1100 + ((l.x * 13) % 900), yoyo: true, repeat: -1, ease: 'Sine.inOut' });
     }
     const cp = L.shorePoint(2.2, 26);
-    const canoe = this.add.image(cp.x, cp.y, 'canoe').setOrigin(ORIGIN.canoe.x, ORIGIN.canoe.y).setDepth(DEPTH.flat + 1);
+    const canoe = this.add.image(cp.x, cp.y, 'canoe').setOrigin(ORIGIN.canoe.x, ORIGIN.canoe.y).setScale(hdScale('canoe')).setDepth(DEPTH.flat + 1);
     this.tweens.add({ targets: canoe, y: cp.y + 1, duration: 1700, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
     // zone dressing: dead stumps in the swamp, rocks in the river bend
     for (const d of L.waterDecor()) {
       const key = d.kind === 'stump' ? 'stump' : `rockM${pick(d.x)}`;
-      this.add.image(d.x, d.y, key).setOrigin(ORIGIN[key].x, ORIGIN[key].y).setDepth(DEPTH.flat + 0.8);
+      this.add.image(d.x, d.y, key).setOrigin(ORIGIN[key].x, ORIGIN[key].y).setScale(hdScale(key)).setDepth(DEPTH.flat + 0.8);
     }
 
     // y-sorted props
@@ -100,8 +100,8 @@ export class WorldScene extends Phaser.Scene {
       const variant = pick(p.x + p.y);
       const multi = ['palm', 'palmKing', 'tree', 'bush', 'bushFlower', 'banana', 'rockS', 'rockM', 'rockL'].includes(p.kind);
       const isSign = p.kind.startsWith('sign');
-      const key = isSign ? 'sign' : multi ? `${p.kind}${variant}` : p.kind;
-      const s = this.add.sprite(p.x, p.y, key, isSign ? 'ABC'.indexOf(p.kind[4]) : 0).setOrigin(ORIGIN[key].x, ORIGIN[key].y).setDepth(DEPTH.sorted + p.y);
+      const key = isSign ? 'sign' : multi ? `${p.kind}${variant}` : p.kind === 'bag' ? 'bagHD' : p.kind;
+      const s = this.add.sprite(p.x, p.y, key, isSign ? 'ABC'.indexOf(p.kind[4]) : 0).setOrigin(ORIGIN[key].x, ORIGIN[key].y).setScale(hdScale(key)).setDepth(DEPTH.sorted + p.y);
       if (p.kind === 'bag') this.bag = s;
       if (p.kind === 'lella') {
         // the gear stall exists only from Stage 2 (and never on the title screen)
@@ -109,8 +109,8 @@ export class WorldScene extends Phaser.Scene {
         L.setStall(this.stallOpen);
         s.setVisible(this.stallOpen);
         if (this.stallOpen) {
-          this.add.rectangle(p.x - 16, p.y - 1, 40, 5, 0x122a30, 0.26).setOrigin(0).setDepth(DEPTH.flat + 2);
-          this.shopSign = this.add.sprite(p.x, p.y - 39, 'shopSign', 0).setOrigin(ORIGIN.shopSign.x, ORIGIN.shopSign.y).setDepth(DEPTH.sorted + p.y + 1);
+          this.add.image(p.x + 4, p.y + 1, 'shadow').setScale(HD * 3, HD * 1.4).setAlpha(0.8).setDepth(DEPTH.flat + 2); // soft shadow under the stall
+          this.shopSign = this.add.sprite(p.x, p.y - 39, 'shopSign', 0).setOrigin(ORIGIN.shopSign.x, ORIGIN.shopSign.y).setScale(hdScale('shopSign')).setDepth(DEPTH.sorted + p.y + 1);
         } else this.shopSign = undefined;
       }
       if (p.kind === 'palm' || p.kind === 'palmKing') { s.play(`${key}-sway`); s.anims.setProgress(((p.x * 7) % 10) / 10); if ((p.x & 1) === 0) s.setFlipX(true); }

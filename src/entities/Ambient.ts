@@ -30,12 +30,12 @@ export class Ambient {
     const homes = L.props.filter((p) => p.kind === 'bushFlower');
     for (let i = 0; i < 16; i++) {
       const h = homes[Math.floor(R() * homes.length)] ?? { x: 400, y: 460 };
-      const s = scene.add.sprite(h.x, h.y - 10, 'butterfly').setDepth(DEPTH.air).play(`butterfly${i % 4}`);
+      const s = scene.add.sprite(h.x, h.y - 10, 'butterfly').setScale(HD).setDepth(DEPTH.air).play(`butterfly${i % 4}`);
       this.butterflies.push({ s, hx: h.x, hy: h.y - 12, t: R() * 10, k: 0.6 + R() * 0.6, x: h.x, y: h.y, tx: 0, ty: 0, wait: 0 });
     }
     for (let i = 0; i < 7; i++) {
       const p = L.shorePoint(R() * Math.PI * 2, 10 + R() * 30);
-      const s = scene.add.sprite(p.x, p.y, 'dragonfly').setDepth(DEPTH.air).play('dragonfly');
+      const s = scene.add.sprite(p.x, p.y, 'dragonfly').setScale(HD).setDepth(DEPTH.air).play('dragonfly');
       this.dragonflies.push({ s, hx: p.x, hy: p.y, t: 0, k: 1, x: p.x, y: p.y, tx: p.x, ty: p.y, wait: R() * 2 });
     }
     for (let i = 0; i < 36; i++) {
@@ -44,7 +44,7 @@ export class Ambient {
       scene.time.delayedCall(R() * 1800, () => this.twinkle(s));
     }
     for (let i = 0; i < 5; i++) this.rings.push(scene.add.sprite(0, 0, 'ring', 0).setScale(HD).setDepth(DEPTH.waterFx).setVisible(false));
-    for (let i = 0; i < 8; i++) this.leaves.push({ s: scene.add.sprite(0, 0, 'leaf', 0).setDepth(DEPTH.air - 1).setVisible(false).play('leaf'), life: 0, vx: 0, ph: 0 });
+    for (let i = 0; i < 8; i++) this.leaves.push({ s: scene.add.sprite(0, 0, 'leaf', 0).setScale(HD).setDepth(DEPTH.air - 1).setVisible(false).play('leaf'), life: 0, vx: 0, ph: 0 });
   }
 
   /** A visible fish close to this point, if any. */

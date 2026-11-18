@@ -58,7 +58,7 @@ export class Thief {
     this.x = this.home.x; this.y = this.home.y;
     this.shadow = scene.add.image(this.x, this.y, 'shadow').setScale(HD).setDepth(DEPTH.flat + 2);
     this.sprite = scene.add.sprite(this.x, this.y, 'sabapathi', 0).setOrigin(ORIGIN.sabapathi.x, ORIGIN.sabapathi.y).setScale(HD);
-    this.sack = scene.add.image(this.x, this.y, 'loot').setOrigin(0.5, 1).setVisible(false);
+    this.sack = scene.add.image(this.x, this.y, 'loot').setScale(HD).setOrigin(0.5, 1).setVisible(false);
     for (let k = 0; k < 2; k++) this.stars.push(scene.add.sprite(0, 0, 'sparkle', 1).setScale(HD).setDepth(DEPTH.air + 4).setVisible(false));
 
     this.fsm = new StateMachine<Thief, TState>(this, {
