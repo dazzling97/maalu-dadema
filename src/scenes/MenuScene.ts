@@ -230,7 +230,7 @@ export class MenuScene extends UiScene {
       this.sans(CX + 30, y, String(e.fish), 8, col);
       this.sans(CX + 80, y, e.won ? fmtTime(e.left) : '-', 8, col);
     });
-    this.button(CX - 56, 160, 100, 'Back', () => this.show('settings', 12), { style: 'primary', h: 18 });
+    this.button(CX - 56, 160, 100, 'Back', () => this.show('settings', 11), { style: 'primary', h: 18 });
     this.button(CX + 56, 161, 100, 'Clear best runs', () => { save({ scores: [] }); this.show('scores'); });
   }
 }

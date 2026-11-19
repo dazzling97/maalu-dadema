@@ -1,6 +1,6 @@
 // Sinhala voice lines: short recorded reactions from the fisherman and Sabapathi.
 //
-// Lines and their subtitles live in src/config/voices.json. Recordings live in
+// Lines (with the Sinhala script to record) live in src/config/voices.json. Recordings live in
 // public/voice/<speaker>/<event>/<NN>.<mp3|ogg|m4a|wav>; voice/index.json (written
 // by the build, served live in dev) lists the files that actually exist, so only
 // real recordings are ever requested and a missing one is simply skipped.
@@ -20,8 +20,6 @@ export type SpeakerId = keyof typeof manifest.speakers;
 interface EventDef { speaker: string; priority: number; cooldown: number; chance: number; when: string; lines: { si: string; en: string }[]; }
 const EVENTS = manifest.events as Record<VoiceEvent, EventDef>;
 
-/** What the subtitle needs to show. */
-export interface SpokenLine { event: VoiceEvent; speaker: SpeakerId; name: string; si: string; en: string; ms: number; priority: number; }
 
 /** Seconds of quiet after a line before casual (1) or important (2) talk may follow. Warnings (3) never wait. */
 const GAP: Record<number, number> = { 1: 3, 2: 0.6, 3: 0 };
@@ -44,8 +42,6 @@ export function pickVariant(available: number[], last: number | undefined, rnd =
 class VoiceService {
   /** True during play (stages and the ending); the title-screen backdrop stays silent. */
   live = false;
-  /** `?voices=preview` shows every line's subtitle even where no recording exists yet. */
-  readonly preview = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('voices') === 'preview';
   private index: Record<string, string[]> = {};
   private indexLoaded = false;
   private buffers = new Map<string, AudioBuffer | 'loading' | 'failed'>();
@@ -53,7 +49,6 @@ class VoiceService {
   private lastVariant = new Map<VoiceEvent, number>();
   private current: { priority: number; stop: () => void; until: number } | null = null;
   private lineEnd = -99;
-  private listeners = new Set<(l: SpokenLine) => void>();
   private base = 'voice/';
 
   /** Load the list of recordings once sound is unlocked, then decode the current cast's clips. */
@@ -95,9 +90,6 @@ class VoiceService {
     this.buffers.set(key, 'failed');
   }
 
-  /** Subtitles listen here. Returns an unsubscribe function. */
-  onLine(f: (l: SpokenLine) => void) { this.listeners.add(f); return () => { this.listeners.delete(f); }; }
-
   /** Stop whoever is speaking (a stage ending, quitting to the menu). */
   hush() { this.current?.stop(); this.current = null; }
 
@@ -119,24 +111,16 @@ class VoiceService {
     const ready = def.lines.map((_l, i) => i).filter((i) => this.buffers.get(keyOf(i)) instanceof AudioBuffer);
     // lines recorded but not decoded yet start loading now; this moment passes in silence
     def.lines.forEach((_l, i) => { if (this.index[keyOf(i)] && !this.buffers.has(keyOf(i))) void this.decode(keyOf(i)); });
-    const pool = ready.length ? ready : this.preview ? def.lines.map((_l, i) => i) : [];
-    const i = pickVariant(pool, this.lastVariant.get(event));
+    const i = pickVariant(ready, this.lastVariant.get(event));
     if (i === null) return false; // nothing recorded for this event: skip quietly
-    const buf = this.buffers.get(keyOf(i));
-    let secs = 1.6;
+    const buf = this.buffers.get(keyOf(i)) as AudioBuffer;
     busy?.stop();
-    if (buf instanceof AudioBuffer) {
-      const stop = audio.playVoice(buf, () => { if (this.current?.stop === stop) this.current = null; });
-      if (!stop) return false;
-      secs = buf.duration;
-      this.current = { priority: def.priority, stop, until: now + secs };
-    } else this.current = { priority: def.priority, stop: () => undefined, until: now + secs }; // preview: subtitle only
+    const stop = audio.playVoice(buf, () => { if (this.current?.stop === stop) this.current = null; });
+    if (!stop) return false;
+    this.current = { priority: def.priority, stop, until: now + buf.duration };
     this.last.set(event, now);
     this.lastVariant.set(event, i);
-    this.lineEnd = now + secs;
-    const line = def.lines[i];
-    const name = manifest.speakers[speaker].name;
-    this.listeners.forEach((f) => f({ event, speaker, name, si: line.si, en: line.en, ms: Math.round(secs * 1000) + 700, priority: def.priority }));
+    this.lineEnd = now + buf.duration;
     return true;
   }
 }
