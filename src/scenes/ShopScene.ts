@@ -4,6 +4,7 @@ import { GEAR, GEAR_ORDER, GearId, RUN, CUR, COIN_PER_FISH } from '../config/bal
 import { GearState, sellFish, buyGear, equipGear, shopHint } from '../systems/Gear';
 import { Economy } from '../systems/Economy';
 import { audio } from '../systems/Audio';
+import { voice } from '../systems/Voice';
 import { UiScene } from './UiScene';
 import { touchMode } from '../systems/Touch';
 import { HD } from '../art/hd';
@@ -71,7 +72,7 @@ export class ShopScene extends UiScene {
         if (equipped) return this.say(`${d.name} is already in your hands.`, true, i);
         if (owned) { equipGear(gear, id); audio.play('equip'); return this.say(`${d.name} equipped.`, true, i); }
         const r = buyGear(gear, id, CUR.index);
-        if (r === 'ok') { audio.play('buy'); return this.say('Equipment upgraded! You can now catch more fish at once!', true, i); }
+        if (r === 'ok') { audio.play('buy'); if (!voice.say('sale')) voice.say('buy'); /* the shopkeeper, or the fisherman if his line is not recorded */ return this.say('Equipment upgraded! You can now catch more fish at once!', true, i); }
         audio.play('deny');
         this.cameras.main.shake(90, 0.0025);
         this.say(r === 'locked' ? `The ${d.name} unlocks in Stage ${d.stage + 1}.` : this.poorReason(d.cost), false, i);

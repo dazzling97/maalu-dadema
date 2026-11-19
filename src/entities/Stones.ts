@@ -5,6 +5,7 @@ import { Layout } from '../world/layout';
 import { Player } from './Player';
 import { HD } from '../art/hd';
 import { audio } from '../systems/Audio';
+import { voice } from '../systems/Voice';
 
 interface Shot { img: Phaser.GameObjects.Image; shadow: Phaser.GameObjects.Image; x: number; y: number; vx: number; vy: number; t: number; life: number; called: boolean; }
 interface Rock { img: Phaser.GameObjects.Image; x: number; y: number; back: number; }
@@ -81,6 +82,7 @@ export class Stones {
     if (this.ammo <= 0) { this.noRocks(); return false; }
     this.ammo--;
     audio.play('throw');
+    voice.say('throw');
     this.emit();
     const p = this.player;
     p.throwAt(tx, ty);

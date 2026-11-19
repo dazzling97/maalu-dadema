@@ -6,6 +6,7 @@ import { fmtTime, load } from '../systems/Storage';
 import { fitUi, uiText, darkPanel, displayText } from './UiScene';
 import type { CoachCard } from '../entities/Tutor';
 import { touchMode } from '../systems/Touch';
+import { voice, SpokenLine } from '../systems/Voice';
 
 /** mm:ss with a leading zero, so the strip never changes width. */
 const clock = (t: number) => fmtTime(t).padStart(5, '0');
@@ -40,6 +41,7 @@ export class HudScene extends Phaser.Scene {
   private hudBoxes: Record<string, { x: number; y: number; w: number; h: number }> = {};
   private point!: Phaser.GameObjects.Image;
   private reticle!: Phaser.GameObjects.Image;
+  private subs!: Phaser.GameObjects.Container;
   private arrow!: Phaser.GameObjects.Image;
   private urgent = false;
   private ended = false;
@@ -124,8 +126,12 @@ export class HudScene extends Phaser.Scene {
     on('gear', this.onGear);
     on('tip', (t: { title: string; sub?: string; icon?: string; frame?: number; ms?: number }) => this.notify(t.title, 'tip', t.ms ?? 3200, t.sub ?? '', t.icon ?? '', t.frame ?? 0));
     this.registry.set('hudBusy', false);
-    on('cutscene', () => this.cameras.main.setVisible(false));
+    // the ending hides the HUD, but a voice line's subtitle still shows
+    on('cutscene', () => this.children.list.forEach((o) => { if (o !== this.subs) (o as unknown as { setVisible(v: boolean): void }).setVisible(false); }));
     this.cameras.main.setVisible(true);
+    this.subs = this.add.container(VIEW.w / 2, 0).setDepth(85).setVisible(false);
+    const offLine = voice.onLine((l) => this.onVoice(l));
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, offLine);
     this.onIntro(CUR.index); // every stage opens with its title card
     on('ended', () => { this.ended = true; this.toast?.destroy(); this.toast = undefined; this.arrow.setVisible(false); this.point.setVisible(false); this.onCoach(null); });
   }
@@ -207,6 +213,28 @@ export class HudScene extends Phaser.Scene {
       this.mark = this.add.rectangle(box.x - 1, box.y - 1, box.w + 2, box.h + 2).setOrigin(0).setStrokeStyle(1, 0xffe36a, 1).setDepth(79);
       this.tweens.add({ targets: this.mark, alpha: 0.3, duration: 420, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
     }
+  }
+
+  /**
+   * Subtitle for a Sinhala voice line: who is speaking and what they say, low in the
+   * middle of the screen (between the thumbs on touch screens), gone when the line ends.
+   */
+  private onVoice(l: SpokenLine) {
+    if (!load().subtitles) return;
+    const c = this.subs;
+    this.tweens.killTweensOf(c);
+    c.removeAll(true);
+    const touchUi = touchMode(), maxW = touchUi ? 226 : 380;
+    const who = uiText(this, 0, 3, l.name, 6.5, l.speaker === 'sabapathi' ? '#ffb4a6' : '#ffe9a8', true).setOrigin(0.5, 0);
+    const said = uiText(this, 0, 11, l.si, 9.5, '#fff6d8', true).setOrigin(0.5, 0).setAlign('center');
+    if (said.width > maxW) said.setWordWrapWidth(maxW, true);
+    const w = Math.ceil(Math.max(who.width, said.width)) + 20, h = Math.ceil(11 + said.height + 4);
+    c.add(this.panelImg(-w / 2, 0, w, h, l.priority === 3 ? 'rgba(255,120,100,0.85)' : 'rgba(246,231,193,0.3)').setAlpha(0.92));
+    c.add([who, said]);
+    const y = touchUi ? VIEW.h - h - 5 : VIEW.h - h - 46; // desktop: above the tutorial card
+    c.setPosition(VIEW.w / 2, y + 3).setAlpha(0).setVisible(true);
+    this.tweens.add({ targets: c, alpha: 1, y, duration: 140, ease: 'Cubic.out' });
+    this.tweens.add({ targets: c, alpha: 0, duration: 260, delay: l.ms, onComplete: () => c.setVisible(false) });
   }
 
   private onGear(g: { coins: number; equipped: GearId; owned: number }) {

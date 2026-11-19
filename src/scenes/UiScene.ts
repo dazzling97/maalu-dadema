@@ -148,18 +148,26 @@ export class UiScene extends Phaser.Scene {
     const s = load();
     let i = this.btns.length;
     const pct = (v: number) => `${Math.round(v * 100)}%`;
-    const slider = (label: string, key: 'master' | 'music' | 'sfx') => {
+    const slider = (label: string, key: 'master' | 'music' | 'sfx' | 'voice') => {
       const row = i++;
       this.button(cx, y, W, `‹   ${label}   ${pct(s[key])}   ›`, () => undefined, {
         adjust: (d) => { audio.set({ [key]: Math.max(0, Math.min(1, Math.round((load()[key] + d * 0.1) * 10) / 10)) }); audio.play(key === 'music' ? 'uiMove' : 'catch'); rebuild(row); },
       });
       y += 19;
     };
-    const toggle = (label: string, on: boolean, flip: () => void) => { const row = i++; this.button(cx, y, W, `${label}:  ${on ? 'On' : 'Off'}`, () => { flip(); rebuild(row); }); y += 19; };
     slider('Master volume', 'master');
     slider('Music volume', 'music');
     slider('Effects volume', 'sfx');
-    toggle('Sound', !s.muted, () => audio.set({ muted: !load().muted }));
+    slider('Voice volume', 'voice');
+    // sound, the Sinhala voice lines and their subtitles share one row
+    {
+      const row = i, left = cx - W / 2, tw = (W - 8) / 3;
+      const third = (k: number, label: string, on: boolean, flip: () => void) => { const r = row + k; i++; this.button(left + tw / 2 + k * (tw + 4), y, tw, `${label}:  ${on ? 'On' : 'Off'}`, () => { flip(); rebuild(r); }); };
+      third(0, 'Sound', !s.muted, () => audio.set({ muted: !load().muted }));
+      third(1, 'Voices', s.voices, () => audio.set({ voices: !load().voices }));
+      third(2, 'Subtitles', s.subtitles, () => save({ subtitles: !load().subtitles }));
+      y += 19;
+    }
     // screen shake and the touch controls share a row: Auto shows them on phones and tablets only
     {
       const row = i++, left = cx - W / 2, hw = (W - 4) / 2;

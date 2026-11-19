@@ -17,10 +17,13 @@ export interface Save {
   eased: string[]; // first encounters that have already been made gentler once
   scores: ScoreEntry[];
   touch: 'auto' | 'on' | 'off'; // on-screen controls: auto = on phones and tablets
+  voice: number; // voice line volume, 0..1
+  voices: boolean; // Sinhala voice lines on / off
+  subtitles: boolean; // Sinhala subtitles under voice lines
 }
 
 const KEY = 'maalu-horu-v3'; // the save slot from the game's first name: kept so nobody loses their settings and best runs
-const DEFAULT: Save = { charId: 'podipasiya', name: '', shake: true, hints: true, master: 0.8, music: 0.6, sfx: 0.9, muted: false, tutorial: false, howSeen: false, tutorials: [], eased: [], scores: [], touch: 'auto' };
+const DEFAULT: Save = { charId: 'podipasiya', name: '', shake: true, hints: true, master: 0.8, music: 0.6, sfx: 0.9, muted: false, tutorial: false, howSeen: false, tutorials: [], eased: [], scores: [], touch: 'auto', voice: 0.9, voices: true, subtitles: true };
 let cache: Save | null = null;
 
 export function load(): Save {

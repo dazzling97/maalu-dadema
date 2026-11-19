@@ -10,6 +10,7 @@ import { Player } from './Player';
 import { Input } from '../systems/Input';
 import { Ambient } from './Ambient';
 import { audio } from '../systems/Audio';
+import { voice } from '../systems/Voice';
 import { HD } from '../art/hd';
 import { uiText } from '../scenes/UiScene';
 import { touchMode } from '../systems/Touch';
@@ -195,6 +196,7 @@ export class Fishing {
     const isNet = this.g.catch > 1;
     this.bob.setTexture(isNet ? 'net' : 'bobber', isNet ? (this.g.catch > 3 ? 1 : 0) : 0).setOrigin(0.5, isNet ? 0.5 : ORIGIN.bobber.y);
     audio.play(isNet ? 'netCast' : 'cast');
+    voice.say('cast');
     this.state = 'cast'; this.t = 0; this.taut = false; this.dip = 0;
     this.prompt.setVisible(false);
     this.bob.setVisible(true);
@@ -245,6 +247,7 @@ export class Fishing {
   private fail(msg: string) {
     this.misses++;
     audio.play('miss');
+    voice.say('escape');
     this.floatText(this.player.sprite.x, this.player.sprite.y - 40, msg, '#ffb0a0');
     this.ring(this.target);
     this.finish(0.45);
@@ -275,6 +278,7 @@ export class Fishing {
     const want = catchSize(this.g.catch, this.eco.room, this.zones.pop[this.zone]);
     const got = this.eco.catchFish(golden ? Math.max(RUN.goldenFish, want) : want);
     audio.play(got > 1 ? 'catchMulti' : 'catch');
+    voice.say(golden || this.kind.rare || got >= 3 || this.sizeIdx === 2 ? 'catch_big' : 'catch');
     if (golden) { this.hookedGolden = false; this.onGolden(); } else if (this.bonanza !== this.zone) for (let i = 0; i < got; i++) this.zones.take(this.zone);
     for (let i = 1; i < got; i++) { // the rest of the haul tumbles in after the first
       const extra = this.scene.add.image(this.target.x, this.target.y, 'catchHD', i % 5).setScale(HD).setDepth(DEPTH.air + 3);
@@ -340,6 +344,7 @@ export class Fishing {
           this.splash(this.target, 4, 7);
           this.bang.setVisible(true);
           audio.play('bite');
+          voice.say('bite');
         }
         break;
       }
