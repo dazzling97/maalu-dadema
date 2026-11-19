@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "build:play": "vite build --config vite.embed.config.ts && node scripts/make-play.cjs"
+    "build:play": "vite build --config vite.embed.config.ts && node scripts/make-play.cjs",
+    "voices": "node scripts/voices.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"

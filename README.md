@@ -25,6 +25,16 @@ node tests/playtest.cjs average:2,skilled:3   # chosen bots on chosen stages
 WASD / arrows move, Shift dashes. Point at the water and press Space to cast; Space again on the `!`.
 E stores carried fish at the bag and opens the gear stall. Q switches equipment. Walk over rocks to pick them up; left click throws one at the cursor. Esc pauses (Resume Game, Restart Stage, Settings, Quit Game; quitting asks first and returns to the title screen without reloading the page). X dismisses the tutorial card on screen.
 
+### Sinhala voice lines
+
+The fisherman and Sabapathi can react out loud in Sinhala: fishing, crocodile warnings, thefts, rock throws, deposits, purchases, stage clear and game over. There are 23 events with 1 to 3 variations each, recorded separately for Podipasiya and Lekam Thuma: 84 clips in all. Settings has **Voice volume**, **Voices On/Off** and **Subtitles On/Off**; subtitles show who is speaking and the Sinhala line.
+
+- **Lines** (Sinhala text, English meaning, priority, cooldown) live in `src/config/voices.json`.
+- **Recordings** go in `public/voice/<speaker>/<event>/<NN>.mp3` (OGG, M4A and WAV also work). `public/voice/SCRIPT.md` lists every file with its line: run `npm run voices` to refresh it, its folders and the recorded count after changing lines or adding clips.
+- **No recordings ship yet.** A line without a file is skipped silently. Open the game with `?voices=preview` to see every subtitle in context before recording. No synthetic or English voices stand in for the Sinhala.
+- **Rules:** one speaker at a time; warnings (priority 3) cut off casual talk, nothing else interrupts; each event has a cooldown, casual events speak only some of the time with a short quiet gap after any line; variations are random and never repeat back to back; the music dips under a line; the title screen stays silent.
+- The dev server lists recordings live and every build writes `voice/index.json`, so only files that exist are ever requested. `play.html` (opened from disk) has no voices.
+
 ### Phones and tablets
 
 Touch controls appear automatically on phones and tablets (Settings → Touch: Auto / On / Off; `?touch=1` or `?touch=0` in the address overrides it). Desktop keyboard and mouse controls are unchanged, and the on-screen controls never show on a desktop unless switched on.
@@ -104,7 +114,7 @@ it), 85 MB of texture memory, no texture larger than 1440 px, and under 1 ms of 
 src/config/      game.ts (resolution, palette), balance.ts (every tunable number)
 src/world/       layout.ts: pond shape, docks, paths, props, collision grid, zones, rock spots
 src/art/         procedural HD art (*HD.ts) and the texture registry
-src/systems/     Economy, Zones, Director, Events, Pathfind (A*), StateMachine, Input, Touch, Page, Storage, Audio
+src/systems/     Economy, Zones, Director, Events, Pathfind (A*), StateMachine, Input, Touch, Page, Storage, Audio, Voice
 src/entities/    Player, Fishing, Crocodile, Thief, Stones, Loot, Ambient
 src/scenes/      Boot, World, Hud, Touch (on-screen controls), Menu, Pause, Result, UiScene (shared kit), flow.ts
 tests/           systems.test.ts (unit), playtest.cjs (bots)

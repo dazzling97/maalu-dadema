@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { VIEW, PAL } from '../config/game';
 import { fitUi, displayText, uiText } from './UiScene';
 import { audio } from '../systems/Audio';
+import { voice } from '../systems/Voice';
 import { Layout } from '../world/layout';
 import { buildTextures } from '../art/textures';
 
@@ -23,6 +24,7 @@ export class BootScene extends Phaser.Scene {
       this.scene.start('world');
       this.scene.launch('menu');
       audio.install();
+      voice.install(); // Sinhala voice lines: loads the list of recordings once sound is unlocked
       audio.startMusic(); // begins on the player's first click or key press
     };
     // The Sinhala logotype needs a Sinhala web font. Wait briefly for it; carry on without if it never arrives.

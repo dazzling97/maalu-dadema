@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { applyStage, STAGES } from '../config/balance';
 import { audio } from '../systems/Audio';
+import { voice } from '../systems/Voice';
 import { freshGear, copyGear, GearState } from '../systems/Gear';
 
 // Scene hand-offs live here so every screen switches the same way. A stage
@@ -18,6 +19,7 @@ function begin(from: Phaser.Scene, stage: number, gear: GearState) {
   from.registry.set('stage', stage);
   applyStage(stage);
   audio.unlock(); audio.setPaused(false); audio.intensity = 0; audio.startMusic();
+  voice.hush(); voice.live = true; voice.preload(); // the chosen fisherman's voice
   audio.play('stageStart');
   ['menu', 'pause', 'result', 'shop', 'hud', 'touch'].forEach((k) => from.scene.stop(k));
   from.scene.get('world').scene.restart();
@@ -37,6 +39,7 @@ export function nextStage(from: Phaser.Scene) { begin(from, (from.registry.get('
 export function retryStage(from: Phaser.Scene) { begin(from, (from.registry.get('stage') as number) ?? 0, (from.registry.get('gearStart') as GearState) ?? freshGear()); }
 export function goMenu(from: Phaser.Scene) {
   from.registry.set('attract', true);
+  voice.hush(); voice.live = false; // the title screen backdrop stays silent
   applyStage(0);
   audio.setPaused(false); audio.intensity = 0;
   ['pause', 'result', 'shop', 'hud', 'touch'].forEach((k) => from.scene.stop(k));

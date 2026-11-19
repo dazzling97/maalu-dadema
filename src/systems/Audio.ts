@@ -1,7 +1,8 @@
 import { load, save } from './Storage';
 
-// One audio service for the whole game. Every sound is synthesised with the
-// Web Audio API, so there are no audio files to load, license or get wrong.
+// One audio service for the whole game. Every sound effect and the music are
+// synthesised with the Web Audio API; the only recordings are the optional
+// Sinhala voice lines (Voice.ts), which play here on their own channel.
 //
 // Browsers keep audio suspended until the player clicks or presses a key, so
 // the context is created (or resumed) on the first such gesture and `available`
@@ -54,6 +55,8 @@ class AudioService {
   private musicBus!: GainNode;
   private musicDuck!: GainNode;
   private sfxBus!: GainNode;
+  private voiceBus!: GainNode;
+  private unlockHooks: (() => void)[] = [];
   private last = new Map<Sfx, number>();
   private active = 0;
   private noiseBuf?: AudioBuffer;
@@ -92,6 +95,7 @@ class AudioService {
         this.ctx = new AC();
         this.master = this.ctx.createGain(); this.master.connect(this.ctx.destination);
         this.sfxBus = this.ctx.createGain(); this.sfxBus.connect(this.master);
+        this.voiceBus = this.ctx.createGain(); this.voiceBus.connect(this.master);
         this.musicBus = this.ctx.createGain(); this.musicDuck = this.ctx.createGain();
         this.musicDuck.connect(this.musicBus); this.musicBus.connect(this.master);
         const len = this.ctx.sampleRate;
@@ -99,6 +103,7 @@ class AudioService {
         const d = this.noiseBuf.getChannelData(0);
         for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
         this.applyVolumes();
+        this.unlockHooks.forEach((f) => { try { f(); } catch { /* a hook must never break sound */ } });
       }
       if (this.ctx.state === 'suspended' && !document.hidden) void this.ctx.resume();
       if (this.wantMusic) this.startMusic();
@@ -112,8 +117,9 @@ class AudioService {
     this.master.gain.setTargetAtTime(s.muted ? 0 : s.master, t, 0.02);
     this.musicBus.gain.setTargetAtTime(s.music * 0.5, t, 0.05);
     this.sfxBus.gain.setTargetAtTime(s.sfx, t, 0.02);
+    this.voiceBus.gain.setTargetAtTime(s.voices ? s.voice : 0, t, 0.02);
   }
-  set(patch: { master?: number; music?: number; sfx?: number; muted?: boolean }) {
+  set(patch: { master?: number; music?: number; sfx?: number; voice?: number; voices?: boolean; muted?: boolean }) {
     save(patch);
     this.applyVolumes();
   }
@@ -205,12 +211,33 @@ class AudioService {
       case 'event': this.seq('triangle', [[10, 0, 0.08], [15, 0.09, 0.08], [10, 0.18, 0.08], [15, 0.27, 0.2]], t, v); break;
     }
   }
+  // ------------------------------------------------------------------ voice lines
+  /** The audio context once sound has been unlocked (voice clips are decoded with it). */
+  get context(): AudioContext | undefined { return this.ctx; }
+  /** Run `f` as soon as sound is unlocked (at once if it already is). */
+  onUnlock(f: () => void) { if (this.ctx) f(); else this.unlockHooks.push(f); }
+  /**
+   * Play a decoded voice clip on the voice channel, with the music dipped under it.
+   * Returns a function that stops it early (a warning cutting off casual chatter).
+   */
+  playVoice(buf: AudioBuffer, onEnd: () => void): (() => void) | null {
+    if (!this.available || this.muted || !load().voices) return null;
+    const src = this.ctx!.createBufferSource(), g = this.ctx!.createGain(), t = this.ctx!.currentTime;
+    src.buffer = buf; src.connect(g); g.connect(this.voiceBus);
+    g.gain.setValueAtTime(1, t);
+    src.onended = () => onEnd();
+    src.start(t);
+    this.duck(buf.duration + 0.2, 0.55);
+    let stopped = false;
+    return () => { if (stopped) return; stopped = true; g.gain.setTargetAtTime(0.0001, this.ctx!.currentTime, 0.03); try { src.stop(this.ctx!.currentTime + 0.12); } catch { /* already ended */ } };
+  }
+
   /** Drop the music under an important sound, then bring it back. */
-  private duck(seconds: number) {
+  private duck(seconds: number, level = 0.25) {
     if (!this.ctx) return;
     const g = this.musicDuck.gain, t = this.ctx.currentTime;
     g.cancelScheduledValues(t);
-    g.setTargetAtTime(0.25, t, 0.03);
+    g.setTargetAtTime(level, t, 0.03);
     g.setTargetAtTime(this.paused ? 0.35 : 1, t + seconds, 0.25);
   }
   private paused = false;

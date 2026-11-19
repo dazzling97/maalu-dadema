@@ -12,6 +12,7 @@ import { Player } from './Player';
 import { Loot } from './Loot';
 import { HD } from '../art/hd';
 import { audio } from '../systems/Audio';
+import { voice } from '../systems/Voice';
 
 export type TState = 'waiting' | 'approaching' | 'sneaking' | 'stealing' | 'escaping' | 'stunned' | 'retreating' | 'inside';
 export interface RivalContext { elapsed: number; fishing: boolean; }
@@ -84,7 +85,7 @@ export class Thief {
       },
       // tiptoe the last stretch, stopping to check nobody is watching
       sneaking: {
-        enter: () => audio.play('sneak'),
+        enter: () => { audio.play('sneak'); voice.say('sneak'); },
         update: (t, dt) => {
           if (t.eco.stored <= 0) { t.say(t.x, t.y - 40, 'EMPTY?! HMPH', '#f6e7c1'); t.scene.game.events.emit('heist', null); return t.fsm.go('retreating'); }
           t.peekT -= dt;
@@ -105,6 +106,7 @@ export class Thief {
           if (!t.loot) { t.say(t.x, t.y - 40, 'EMPTY?! HMPH', '#f6e7c1'); t.scene.game.events.emit('heist', null); return t.fsm.go('retreating'); }
           t.say(t.x, t.y - 40, 'HEH HEH HEH!', '#ffe36a');
           audio.play('stolen');
+          voice.say('steal');
           t.scene.cameras.main.shake(120, 0.003);
           t.scene.game.events.emit('heist', { n: t.loot, status: 'stolen' });
           t.changed();
@@ -121,6 +123,7 @@ export class Thief {
             t.eco.lose(t.loot);
             t.say(t.x, t.y - 40, `-${t.loot} FISH`, '#ffb0a0');
             audio.play('lost');
+            voice.say('escaped');
             t.scene.game.events.emit('heist', { n: t.loot, status: 'escaped' });
             t.loot = 0;
             t.fsm.go('inside');
@@ -165,6 +168,7 @@ export class Thief {
     this.raids++;
     this.scene.game.events.emit('prowl');
     audio.play('prowl'); // his theme: you always hear him set out
+    voice.say('thief_alert'); // and the fisherman sees him go
     this.fsm.go('approaching');
   }
   private endRaid() { this.rushing = false; this.sinceRaid = 0; this.x = this.home.x; this.y = this.home.y; this.fsm.go('waiting'); }
@@ -208,6 +212,7 @@ export class Thief {
     } else this.scene.game.events.emit('heist', null);
     this.say(this.x, this.y - 42, 'AIYO!', '#ffe36a');
     audio.play('bonk');
+    voice.say('stunned');
     this.fsm.go('stunned');
     return true;
   }

@@ -52,9 +52,9 @@ export class PauseScene extends UiScene {
       this.button(cx, 158, 124, 'Quit Game', () => this.go('quit'));
       this.sans(cx, 184, 'Esc to resume', 7, '#e0c38a', false, true);
     } else if (this.mode === 'settings') {
-      this.panel(cx - 116, 34, 232, 186);
-      this.text(cx, 42, 'SETTINGS', '#ffe9a8', 2, true);
-      const y = this.settingsRows(cx, 60, 208, (row) => this.go('settings', row));
+      this.panel(cx - 116, 30, 232, 196);
+      this.text(cx, 38, 'SETTINGS', '#ffe9a8', 2, true);
+      const y = this.settingsRows(cx, 56, 208, (row) => this.go('settings', row));
       this.button(cx, y + 4, 100, 'Back', () => this.go('menu', 2), { style: 'primary', h: 18 });
       this.soundState(cx, y + 28);
     } else {

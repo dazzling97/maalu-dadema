@@ -5,6 +5,7 @@ import { Player } from './Player';
 import { Economy } from '../systems/Economy';
 import { HD } from '../art/hd';
 import { audio } from '../systems/Audio';
+import { voice } from '../systems/Voice';
 
 interface Drop { img: Phaser.GameObjects.Image; x: number; y: number; life: number; }
 
@@ -39,7 +40,7 @@ export class Loot {
       let taken = false;
       if (near) {
         taken = this.eco.pickUp();
-        if (taken) { this.picked++; this.say(d.x, d.y - 12, '+1 FISH', '#9ff08a'); audio.play('recover'); this.changed(); }
+        if (taken) { this.picked++; this.say(d.x, d.y - 12, '+1 FISH', '#9ff08a'); audio.play('recover'); voice.say('recover'); this.changed(); }
         else if (this.fullT <= 0) { this.fullT = 1.5; this.say(d.x, d.y - 12, 'HANDS FULL', '#ffb0a0'); }
       }
       if (d.life < 6) d.img.setAlpha(Math.floor(d.life * 6) % 2 ? 0.4 : 1);

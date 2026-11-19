@@ -1,0 +1,104 @@
+{
+  "_about": "Every voice line in the game. Files live in public/voice/<speaker folder>/<event>/<NN>.<mp3|ogg|m4a|wav>, where NN is the line number below (01, 02, ...). 'player' lines are recorded once per fisherman (podipasiya, lekam). priority: 3 = warning (interrupts anything), 2 = important, 1 = casual chatter. cooldown: seconds before the same event may speak again. chance: how often a casual event speaks at all. Run `npm run voices` after editing to refresh public/voice/SCRIPT.md and the folders.",
+  "speakers": {
+    "podipasiya": { "name": "Podipasiya", "player": true },
+    "lekam": { "name": "Lekam Thuma", "player": true },
+    "sabapathi": { "name": "Sabapathi", "player": false }
+  },
+  "events": {
+    "cast": { "speaker": "player", "priority": 1, "cooldown": 18, "chance": 0.35, "when": "Casting the line", "lines": [
+      { "si": "මෙන්න යනවා!", "en": "Here it goes!" },
+      { "si": "අද නම් ලොකු එකෙක් අහු වෙයි.", "en": "A big one will bite today." },
+      { "si": "හෙමින්... හෙමින්...", "en": "Slowly... slowly..." }
+    ] },
+    "bite": { "speaker": "player", "priority": 1, "cooldown": 14, "chance": 0.3, "when": "A fish bites (the ! appears)", "lines": [
+      { "si": "අහු වුණා!", "en": "Got a bite!" },
+      { "si": "ඔන්න කනවා!", "en": "It's biting!" }
+    ] },
+    "catch": { "speaker": "player", "priority": 1, "cooldown": 8, "chance": 0.6, "when": "Landing a fish", "lines": [
+      { "si": "හරි! මාළුවෙක්!", "en": "Yes! A fish!" },
+      { "si": "අල්ලගත්තා!", "en": "Caught it!" },
+      { "si": "තව එකෙක්!", "en": "One more!" }
+    ] },
+    "catch_big": { "speaker": "player", "priority": 2, "cooldown": 8, "chance": 1, "when": "A rare fish, or three or more fish in one net", "lines": [
+      { "si": "අම්මෝ! ලොකු එකෙක්!", "en": "Wow! A big one!" },
+      { "si": "හා! මේ පාර ගොඩක් අහු වුණා!", "en": "Ha! Lots of them this time!" }
+    ] },
+    "escape": { "speaker": "player", "priority": 1, "cooldown": 10, "chance": 0.6, "when": "A fish gets away", "lines": [
+      { "si": "අයියෝ, ගැලවිලා ගියා!", "en": "Oh no, it got away!" },
+      { "si": "අනේ, මඟ ඇරුණා.", "en": "Aw, missed it." }
+    ] },
+    "croc_warn": { "speaker": "player", "priority": 3, "cooldown": 9, "chance": 1, "when": "A crocodile rears up to attack", "lines": [
+      { "si": "කිඹුලෙක්! පරිස්සමින්!", "en": "A crocodile! Careful!" },
+      { "si": "අනේ! කිඹුලා එනවා!", "en": "Oh no! The crocodile is coming!" },
+      { "si": "ඉක්මනට පැනගන්න ඕනේ!", "en": "Got to get away, quick!" }
+    ] },
+    "hurt": { "speaker": "player", "priority": 2, "cooldown": 3, "chance": 1, "when": "Bitten by a crocodile", "lines": [
+      { "si": "අම්මෝ!", "en": "Ouch!" },
+      { "si": "ආයි! රිදුණා!", "en": "Ow! That hurt!" }
+    ] },
+    "throw": { "speaker": "player", "priority": 1, "cooldown": 10, "chance": 0.35, "when": "Throwing a rock", "lines": [
+      { "si": "මෙන්න ගලක්!", "en": "Here's a rock!" },
+      { "si": "ගන්නවා මේක!", "en": "Take this!" }
+    ] },
+    "rock_hit": { "speaker": "player", "priority": 1, "cooldown": 6, "chance": 0.8, "when": "A rock stuns a crocodile", "lines": [
+      { "si": "වැදුණා!", "en": "Hit!" },
+      { "si": "හරියටම වැදුණා!", "en": "Right on target!" }
+    ] },
+    "deposit": { "speaker": "player", "priority": 1, "cooldown": 8, "chance": 0.7, "when": "Storing fish in the bag", "lines": [
+      { "si": "මල්ලට දැම්මා!", "en": "Into the bag!" },
+      { "si": "හොඳයි, තව ටිකයි.", "en": "Good, just a few more." },
+      { "si": "දැන් ආරක්ෂිතයි!", "en": "Safe now!" }
+    ] },
+    "thief_alert": { "speaker": "player", "priority": 3, "cooldown": 20, "chance": 1, "when": "Sabapathi sets out for the bag", "lines": [
+      { "si": "සබාපති එනවා! මල්ල බලාගන්න!", "en": "Sabapathi is coming! Watch the bag!" },
+      { "si": "අර හොරා ආයෙත් ආවා!", "en": "That thief is back again!" }
+    ] },
+    "recover": { "speaker": "player", "priority": 2, "cooldown": 8, "chance": 1, "when": "Sabapathi drops the stolen fish", "lines": [
+      { "si": "මගේ මාළු ආපහු!", "en": "My fish, back!" },
+      { "si": "හා, ආපහු ගත්තා!", "en": "Ha, got them back!" }
+    ] },
+    "buy": { "speaker": "player", "priority": 2, "cooldown": 4, "chance": 1, "when": "Buying equipment (if Sabapathi has no line recorded)", "lines": [
+      { "si": "අලුත් දැලක්! දැන් බලන්න!", "en": "A new net! Now watch this!" },
+      { "si": "නියමයි, දැන් ගොඩක් අල්ලන්න පුළුවන්.", "en": "Great, now I can catch lots." }
+    ] },
+    "stage_clear": { "speaker": "player", "priority": 2, "cooldown": 5, "chance": 1, "when": "Stage complete", "lines": [
+      { "si": "නියමයි! ඊළඟ වැවට යමු!", "en": "Brilliant! On to the next tank!" },
+      { "si": "මල්ල පිරුණා!", "en": "The bag is full!" }
+    ] },
+    "victory": { "speaker": "player", "priority": 2, "cooldown": 5, "chance": 1, "when": "Beating Stage 3 (the ending)", "lines": [
+      { "si": "සබාපති, ඔක්කොම මාළු මගේ!", "en": "Sabapathi, all the fish are mine!" },
+      { "si": "අද ගමටම හොඳ කෑමක්!", "en": "A good meal for the whole village tonight!" }
+    ] },
+    "game_over": { "speaker": "player", "priority": 2, "cooldown": 5, "chance": 1, "when": "Stage failed", "lines": [
+      { "si": "අනේ... ආයෙත් උත්සාහ කරමු.", "en": "Oh... let's try again." },
+      { "si": "හෙට නම් හරියන්න ඕනේ.", "en": "Tomorrow it has to work." }
+    ] },
+    "sneak": { "speaker": "sabapathi", "priority": 1, "cooldown": 25, "chance": 0.5, "when": "Sabapathi creeps up to the bag", "lines": [
+      { "si": "හෙහ් හෙහ්... කවුරුත් බලන්නේ නෑ.", "en": "Heh heh... nobody's looking." },
+      { "si": "හෙමින්... හෙමින්...", "en": "Slowly... slowly..." }
+    ] },
+    "steal": { "speaker": "sabapathi", "priority": 3, "cooldown": 8, "chance": 1, "when": "Sabapathi grabs fish from the bag", "lines": [
+      { "si": "හෙහ් හෙහ්! මේ මාළු මට!", "en": "Heh heh! These fish are mine!" },
+      { "si": "ස්තූතියි යාළුවා!", "en": "Thanks, friend!" }
+    ] },
+    "stunned": { "speaker": "sabapathi", "priority": 2, "cooldown": 4, "chance": 1, "when": "A rock hits Sabapathi", "lines": [
+      { "si": "අයියෝ! මගේ ඔළුව!", "en": "Ow! My head!" },
+      { "si": "අනේ අම්මේ!", "en": "Oh, mother!" }
+    ] },
+    "escaped": { "speaker": "sabapathi", "priority": 2, "cooldown": 8, "chance": 1, "when": "Sabapathi gets home with stolen fish", "lines": [
+      { "si": "අද රෑට මාළු කරිය!", "en": "Fish curry tonight!" },
+      { "si": "ආයෙත් එනවා, හෙහ් හෙහ්!", "en": "I'll be back, heh heh!" }
+    ] },
+    "sale": { "speaker": "sabapathi", "priority": 2, "cooldown": 4, "chance": 1, "when": "Selling equipment in his shop", "lines": [
+      { "si": "හොඳ තේරීමක්! සල්ලි වටිනවා!", "en": "Good choice! Worth every coin!" },
+      { "si": "හොඳ බඩුවක්, මහත්තයෝ!", "en": "Fine goods, sir!" }
+    ] },
+    "shocked": { "speaker": "sabapathi", "priority": 2, "cooldown": 5, "chance": 1, "when": "The ending: the fisherman turns up at his shop", "lines": [
+      { "si": "අයියෝ?!", "en": "Aiyo?!" }
+    ] },
+    "defeat": { "speaker": "sabapathi", "priority": 2, "cooldown": 5, "chance": 1, "when": "The ending: he sulks off", "lines": [
+      { "si": "හ්ම්! ලබන කන්නයේ බලමු!", "en": "Hmph! Next season, we'll see!" }
+    ] }
+  }
+}

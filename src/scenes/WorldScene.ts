@@ -25,6 +25,7 @@ import { load, save, submitScore } from '../systems/Storage';
 import { RunResult } from './ResultScene';
 import { Totals } from './flow';
 import { audio } from '../systems/Audio';
+import { voice } from '../systems/Voice';
 import { Tutor } from '../entities/Tutor';
 import { uiText } from './UiScene';
 import { touch, touchMode } from '../systems/Touch';
@@ -154,7 +155,7 @@ export class WorldScene extends Phaser.Scene {
     const allRocks = L.rockSpots(reach);
     const rocks = allRocks.filter((_r, i) => Math.floor((i + 1) * CUR.rockShare) > Math.floor(i * CUR.rockShare)); // later stages leave some spots empty
     this.stones = new Stones(this, L, this.player, rocks, () => [...this.crocs.list, this.sabapathi], (t) => {
-      if (t instanceof Crocodile) { this.eco.stunned++; this.clock.breather(); }
+      if (t instanceof Crocodile) { this.eco.stunned++; this.clock.breather(); voice.say('rock_hit'); }
       this.float(t.x, t.y - 22, 'BONK!', '#ffe36a');
       const praise = this.tutor.onBonk(t);
       if (praise) this.game.events.emit('coachNote', { text: praise, kind: 'good' });
@@ -305,6 +306,7 @@ export class WorldScene extends Phaser.Scene {
       });
     }
     this.float(BAG_POS.x, BAG_POS.y - 46, `+${n} IN THE BAG`, '#9ff08a');
+    voice.say('deposit');
     this.bagChanged();
     this.game.events.emit('deposited', n);
     this.time.delayedCall(n * 90 + 260, () => { this.depositing = false; });
@@ -458,6 +460,7 @@ export class WorldScene extends Phaser.Scene {
     this.game.events.emit('hearts', this.player.hearts);
     this.float(this.player.x, this.player.y - 40, 'OUCH!', '#ffb0a0');
     audio.play('hurt');
+    voice.say('hurt');
     if (this.player.hearts <= 0) this.end('dead');
   }
 
@@ -482,6 +485,8 @@ export class WorldScene extends Phaser.Scene {
     const result: RunResult = { mode: !win ? 'fail' : last ? 'final' : 'stage', outcome, stored: this.eco.stored, stolen: this.eco.stolen, stunned: this.eco.stunned, left, totals, best };
     audio.intensity = 0;
     audio.play(!win ? 'fail' : last ? 'victory' : CUR.index === 0 ? 'stage1' : 'stage2');
+    voice.hush(); // whatever was being said, the result matters more
+    if (!win) voice.say('game_over'); else if (!last) voice.say('stage_clear'); // the final win speaks in the ending
     const cam = this.cameras.main;
     if (!win) { cam.shake(220, 0.006); this.time.delayedCall(1100, () => this.scene.launch('result', result)); return; }
     cam.flash(300, 255, 240, 180);
@@ -524,12 +529,14 @@ export class WorldScene extends Phaser.Scene {
       this.tweens.add({ targets: thief, y: thief.y - 6, duration: 110, yoyo: true });
       this.tweens.add({ targets: bang, y: bang.y - 4, duration: 140, yoyo: true, repeat: 3, onComplete: () => bang.destroy() });
       this.float(thief.x, thief.y - 52, 'AIYO?!', '#ffe36a');
+      voice.say('shocked');
       audio.play('bonk');
     });
     // 3. the fisherman gloats and celebrates
     at(3500, () => {
       hero.sprite.play(`${id}-idle-down`);
       this.float(hero.sprite.x, hero.sprite.y - 44, `${name}: ALL THE FISH, SABAPATHI!`, '#9ff08a');
+      voice.say('victory');
       this.tweens.add({ targets: hero.sprite, y: hero.sprite.y - 7, duration: 150, yoyo: true, repeat: 5, ease: 'Quad.out' });
       for (let i = 0; i < 14; i++) at(i * 110, () => {
         const f = this.add.image(hero.sprite.x, hero.sprite.y - 22, 'catchHD', i % 5).setScale(HD).setDepth(DEPTH.air + 3);
@@ -545,6 +552,7 @@ export class WorldScene extends Phaser.Scene {
     // 4. Sabapathi sulks off into his shop
     at(5300, () => {
       this.float(thief.x, thief.y - 44, 'HMPH! NEXT SEASON...', '#f6e7c1');
+      voice.say('defeat');
       audio.play('lost');
       this.tweens.add({ targets: thief, x: thief.x + 1, duration: 50, yoyo: true, repeat: 7 });
     });

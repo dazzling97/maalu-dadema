@@ -208,8 +208,9 @@ export class MenuScene extends UiScene {
     this.panel(CX - 116, 32, 232, 196);
     const W = 208;
     let y = this.settingsRows(CX, 40, W, (row) => this.show('settings', row));
-    this.button(CX, y, W, 'Fisherman and name', () => this.show('chars')); y += 19;
-    this.button(CX, y, W, 'Best runs', () => this.show('scores')); y += 23;
+    const hw = (W - 4) / 2; // fisherman and best runs share a row, leaving room for the voice settings
+    this.button(CX - W / 2 + hw / 2, y, hw, 'Fisherman and name', () => this.show('chars'));
+    this.button(CX + W / 2 - hw / 2, y, hw, 'Best runs', () => this.show('scores')); y += 23;
     this.button(CX, y, 100, 'Back', () => this.show('main'), { style: 'primary', h: 18 });
     this.soundState(CX, 234);
     this.footer(touchMode() ? 'Tap the left or right side of a volume to change it' : 'Up / Down to choose.  Left / Right to adjust.  Enter to select');
@@ -229,7 +230,7 @@ export class MenuScene extends UiScene {
       this.sans(CX + 30, y, String(e.fish), 8, col);
       this.sans(CX + 80, y, e.won ? fmtTime(e.left) : '-', 8, col);
     });
-    this.button(CX - 56, 160, 100, 'Back', () => this.show('settings', 7), { style: 'primary', h: 18 });
+    this.button(CX - 56, 160, 100, 'Back', () => this.show('settings', 12), { style: 'primary', h: 18 });
     this.button(CX + 56, 161, 100, 'Clear best runs', () => { save({ scores: [] }); this.show('scores'); });
   }
 }

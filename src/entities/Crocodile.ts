@@ -7,6 +7,7 @@ import { StateMachine } from '../systems/StateMachine';
 import { Player } from './Player';
 import { HD } from '../art/hd';
 import { audio } from '../systems/Audio';
+import { voice } from '../systems/Voice';
 
 export type CState = 'surface' | 'patrol' | 'hunt' | 'telegraph' | 'lunge' | 'recover' | 'reposition' | 'stunned' | 'retreat' | 'gone';
 /** Only one crocodile may wind up an attack at a time, so lunges can never stack. */
@@ -68,7 +69,7 @@ export class Crocodile {
       },
       // rear back, jaws open, a clear beat before the strike
       telegraph: {
-        enter: (c) => { c.alert.setVisible(true); c.face(c.player.x); audio.play('crocWarn'); },
+        enter: (c) => { c.alert.setVisible(true); c.face(c.player.x); audio.play('crocWarn'); voice.say('croc_warn'); },
         update: (c) => {
           c.face(c.player.x);
           if (c.fsm.time > CROC.telegraph * (c.ease < 1 ? 2.4 : 1)) {
