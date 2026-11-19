@@ -47,7 +47,7 @@ function main() {
   const pri = { 1: 'casual', 2: 'important', 3: 'warning' };
   let md = `# Malu Dadayama — voice recording script\n\n`;
   md += `Record each line in Sinhala and save it at the path shown (MP3 is the safest choice: it plays on every phone, tablet and browser; OGG, M4A and WAV also work). Keep clips short, about 0.5–2 seconds, trimmed tight, mono, with no music or effects. Lines without a recording are skipped silently, so you can add them a few at a time.\n\n`;
-  md += `After adding files, reload the game (in development) or rebuild. To preview the subtitles of every line before recording, open the game with \`?voices=preview\` in the address.\n\n`;
+  md += `After adding files, reload the game (in development) or commit and push (the live site picks them up on its next deploy).\n\n`;
   md += `This file is generated from \`src/config/voices.json\` by \`npm run voices\`: edit the lines there, not here. Please have a native speaker check the Sinhala before recording.\n\n`;
   let have = 0, total = 0;
   for (const [ev, d] of Object.entries(m.events)) {

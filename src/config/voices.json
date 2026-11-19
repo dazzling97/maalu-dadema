@@ -1,5 +1,5 @@
 {
-  "_about": "Every voice line in the game. Files live in public/voice/<speaker folder>/<event>/<NN>.<mp3|ogg|m4a|wav>, where NN is the line number below (01, 02, ...). 'player' lines are recorded once per fisherman (podipasiya, lekam). priority: 3 = warning (interrupts anything), 2 = important, 1 = casual chatter. cooldown: seconds before the same event may speak again. chance: how often a casual event speaks at all. Run `npm run voices` after editing to refresh public/voice/SCRIPT.md and the folders.",
+  "_about": "Every voice line in the game (the Sinhala text is the recording script; it is not shown on screen). Files live in public/voice/<speaker folder>/<event>/<NN>.<mp3|ogg|m4a|wav>, where NN is the line number below (01, 02, ...). 'player' lines are recorded once per fisherman (podipasiya, lekam). priority: 3 = warning (interrupts anything), 2 = important, 1 = casual chatter. cooldown: seconds before the same event may speak again. chance: how often a casual event speaks at all. Run `npm run voices` after editing to refresh public/voice/SCRIPT.md and the folders.",
   "speakers": {
     "podipasiya": { "name": "Podipasiya", "player": true },
     "lekam": { "name": "Lekam Thuma", "player": true },

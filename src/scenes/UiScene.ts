@@ -159,13 +159,12 @@ export class UiScene extends Phaser.Scene {
     slider('Music volume', 'music');
     slider('Effects volume', 'sfx');
     slider('Voice volume', 'voice');
-    // sound, the Sinhala voice lines and their subtitles share one row
+    // all sound, and the Sinhala voice lines on their own, share one row
     {
-      const row = i, left = cx - W / 2, tw = (W - 8) / 3;
-      const third = (k: number, label: string, on: boolean, flip: () => void) => { const r = row + k; i++; this.button(left + tw / 2 + k * (tw + 4), y, tw, `${label}:  ${on ? 'On' : 'Off'}`, () => { flip(); rebuild(r); }); };
-      third(0, 'Sound', !s.muted, () => audio.set({ muted: !load().muted }));
-      third(1, 'Voices', s.voices, () => audio.set({ voices: !load().voices }));
-      third(2, 'Subtitles', s.subtitles, () => save({ subtitles: !load().subtitles }));
+      const row = i, left = cx - W / 2, hw = (W - 4) / 2;
+      const half = (k: number, label: string, on: boolean, flip: () => void) => { const r = row + k; i++; this.button(left + hw / 2 + k * (hw + 4), y, hw, `${label}:  ${on ? 'On' : 'Off'}`, () => { flip(); rebuild(r); }); };
+      half(0, 'Sound', !s.muted, () => audio.set({ muted: !load().muted }));
+      half(1, 'Voices', s.voices, () => audio.set({ voices: !load().voices }));
       y += 19;
     }
     // screen shake and the touch controls share a row: Auto shows them on phones and tablets only
